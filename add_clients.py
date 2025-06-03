@@ -7,7 +7,7 @@ class AddClients:
     def __init__(self, api_gateway_client):
         self.client = api_gateway_client
 
-    def add_client(self, client_data):
+    def add_client(self, client_data) -> dict:
         try:
             if (
                 not isinstance(client_data, dict)
@@ -21,6 +21,7 @@ class AddClients:
             return response
         except Exception as e:
             logging.error("Error al agregar cliente: %s", e)
+            return {"error": str(e)}
 
 
 if __name__ == "__main__":
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    clients = AddClients(
+    oClients = AddClients(
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_CLIENTES"), ApiKeyManager())
     )
     # Ejemplo de POST agregando un cliente
@@ -49,7 +50,7 @@ if __name__ == "__main__":
                 }
             ]
         }
-        result = clients.add_client(payload)
+        result = oClients.add_client(payload)
         print("Respuesta POST:", result)
     except Exception as e:
         print("Error en POST:", e)

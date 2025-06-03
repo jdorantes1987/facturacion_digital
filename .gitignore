@@ -5,6 +5,7 @@ __pycache__/
 
 # archive files
 api_key.txt 
+key.json
 
 # C extensions
 *.so
