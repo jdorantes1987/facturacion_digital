@@ -1,6 +1,7 @@
+import logging
+
 from api_gateway_client import ApiGatewayClient
 from api_key_manager import ApiKeyManager
-import logging
 
 
 class AddInvoice:
@@ -24,10 +25,44 @@ class AddInvoice:
             return {"error": str(e)}
 
 
+def agrupar_facturas(data_a_facturar):
+    facturas_dict = {}
+    for item in data_a_facturar:
+        numero_factura = item["numeroFactura"]
+        producto = {
+            "codigoProducto": item["codigoProducto"],
+            "nombreProducto": item["nombreProducto"],
+            "descripcionProducto": item["descripcionProducto"],
+            "tipoImpuesto": item["tipoImpuesto"],
+            "cantidadAdquirida": item["cantidadAdquirida"],
+            "precioProducto": item["precioProducto"],
+        }
+        # Campos de factura (sin productos)
+        factura_keys = [
+            "numeroFactura",
+            "documentoIdentidadCliente",
+            "nombreRazonSocialCliente",
+            "correoCliente",
+            "direccionCliente",
+            "telefonoCliente",
+            "tasa_del_dia",
+            "order_payment_methods",
+        ]
+        if numero_factura not in facturas_dict:
+            factura = {k: item[k] for k in factura_keys if k in item}
+            factura["productos"] = [producto]
+            facturas_dict[numero_factura] = factura
+        else:
+            facturas_dict[numero_factura]["productos"].append(producto)
+    return list(facturas_dict.values())
+
+
 if __name__ == "__main__":
     import os
 
     from dotenv import load_dotenv
+
+    from data_facturacion import DataFacturacion
 
     load_dotenv()
     logging.basicConfig(
@@ -37,43 +72,21 @@ if __name__ == "__main__":
     oInvoice = AddInvoice(
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_INVOICES"), ApiKeyManager())
     )
+    data_a_facturar = DataFacturacion().get_data_a_facturar()
+    data_a_facturar = data_a_facturar.drop(["enum"], axis=1)
+    data_a_facturar = data_a_facturar.to_dict(orient="records")
+
+    # Agrupar por numeroFactura y productos
+    facturas_agrupadas = agrupar_facturas(data_a_facturar)
+
     # Ejemplo de POST agregando una factura
     try:
         payload = {
             "numeroSerie": "A",
-            "cantidadFactura": 1,
-            "facturas": [
-                {
-                    "numeroFactura": "00001",
-                    "documentoIdentidadCliente": "J405722177",
-                    "nombreRazonSocialCliente": "SISTEMAS ADMINISTRATIVOS PRADO, C.A",
-                    "correoCliente": "sprado@prado.com",
-                    "direccionCliente": "Caracas, Venezuela",
-                    "telefonoCliente": "04142094290",
-                    "productos": [
-                        {
-                            "codigoProducto": "ACI-H_01-1-2-1-1-2-1-015",
-                            "nombreProducto": "ACI 15M SM F.O.",
-                            "descripcionProducto": "Servicio Junio 2024 hasta Mayo 2025",
-                            "tipoImpuesto": "G",
-                            "cantidadAdquirida": 15,
-                            "precioProducto": "1,55",
-                        }
-                    ],
-                    "tasa_del_dia": "56.65",
-                    "order_payment_methods": [
-                        {
-                            "order_payment_method": "pago_movil",
-                            "monto": "56.65",
-                            "igtf": "",
-                            "banco": "Banco de Venezuela",
-                            "telefono_pago_movil": "00000000000",
-                            "numero_de_referencia_de_operacion": "123456",
-                        }
-                    ],
-                }
-            ],
+            "cantidadFactura": len(facturas_agrupadas),
+            "facturas": facturas_agrupadas,
         }
+        print("Payload a enviar:", payload)
         result = oInvoice.add_invoice(payload)
         print("Respuesta POST:", result)
     except Exception as e:
