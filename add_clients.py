@@ -29,6 +29,8 @@ if __name__ == "__main__":
 
     from dotenv import load_dotenv
 
+    from data_facturacion import DataFacturacion
+
     load_dotenv()
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -39,18 +41,13 @@ if __name__ == "__main__":
     )
     # Ejemplo de POST agregando un cliente
     try:
-        payload = {
-            "clientes": [
-                {
-                    "documentoIdentidadCliente": "J405722177",
-                    "nombreRazonSocialCliente": "SISTEMAS ADMINISTRATIVOS PRADO, C.A",
-                    "correoCliente": "sprado@prado.com",
-                    "telefonoCliente": "04142094290",
-                    "direccionCliente": "Caracas, Venezuela",
-                }
-            ]
-        }
-        result = oClients.add_client(payload)
+        # Obtiene los primeros 3 clientes de DataFacturacion y los convierte a dict
+        clientes = (
+            DataFacturacion().get_data_clientes().head(1).to_dict(orient="records")
+        )
+        # Asignar la clave "clientes" al dict
+        payload = {"clientes": clientes}
+        result = oClients.add_client(payload)  # Envía el dict, no el string
         print("Respuesta POST:", result)
     except Exception as e:
         print("Error en POST:", e)
