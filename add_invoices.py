@@ -66,6 +66,8 @@ class AddInvoice:
                 # Si el campo "order_payment_method" esta vacio dejar el campo order_payment_methods vacio
                 if not factura["order_payment_methods"][0]["order_payment_method"]:
                     factura["order_payment_methods"] = []
+                    # eliminar clave "tasa_del_dia"
+                    factura.pop("tasa_del_dia", None)
 
                 facturas_dict[numero_factura] = factura
             else:
@@ -109,7 +111,7 @@ if __name__ == "__main__":
             "facturas": facturas_agrupadas,
         }
         print("Payload a enviar:", payload)
-        # result = oInvoice.add_invoice(payload)
-        # print("Respuesta POST:", result)
+        result = oInvoice.add_invoice(payload)
+        print("Respuesta POST:", result)
     except Exception as e:
         print("Error en POST:", e)
