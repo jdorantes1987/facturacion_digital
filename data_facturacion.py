@@ -20,7 +20,7 @@ class DataFacturacion:
         # Construir el servicio de la API de Google Sheets
         self.sheet_service = build("sheets", "v4", credentials=self.creds)
 
-    def get_data_facturacion(self):
+    def get_data_a_facturar(self) -> DataFrame:
         # Selecciona la hoja de Google Sheets
         worksheet = self.spreadsheet.worksheet("facturacion")
         # Obtiene todos los valores de la hoja de cálculo
@@ -31,7 +31,9 @@ class DataFacturacion:
             ],  # obtiene la primera fila como encabezados
         )
         cols_montos = [
-            "precioProducto",
+            "tasa_del_dia",
+            "monto",
+            "igtf",
         ]  # Lista de columnas que contienen montos
         # Eliminar separadores de miles y reemplazar coma decimal por punto
         for col in cols_montos:
@@ -45,14 +47,18 @@ class DataFacturacion:
             data[cols_montos] = data[cols_montos].apply(
                 to_numeric, errors="raise"  # Convertir a float errores a NaN
             )
+            data["precioProducto"] = data["precioProducto"].str.replace(
+                ".", "", regex=False
+            )  # Eliminar separador de miles
             data["cantidadAdquirida"] = data["cantidadAdquirida"].astype(int)
+            data = data[data["facturar"].str.upper() == "SI"]
         except Exception as e:
             print(f"Error al convertir columnas a numéricas: {e}")
             data = DataFrame()  # Si hay un error, devuelve un DataFrame vacío
 
         return data
 
-    def get_data_clientes(self):
+    def get_data_clientes(self) -> DataFrame:
         # Selecciona la hoja de Google Sheets
         worksheet = self.spreadsheet.worksheet("clientes")
         # Obtiene todos los valores de la hoja de cálculo
@@ -64,7 +70,7 @@ class DataFacturacion:
         )
         return data
 
-    def get_data_productos(self):
+    def get_data_productos(self) -> DataFrame:
         # Selecciona la hoja de Google Sheets
         worksheet = self.spreadsheet.worksheet("productos")
         # Obtiene todos los valores de la hoja de cálculo
@@ -98,5 +104,5 @@ class DataFacturacion:
 
 if __name__ == "__main__":
     oDataFacturacion = DataFacturacion()
-    df_productos = oDataFacturacion.get_data_productos().head(3)
-    print(df_productos.to_dict(orient="records"))
+    df_a_facturar = oDataFacturacion.get_data_a_facturar()
+    print(df_a_facturar.to_dict(orient="records"))
