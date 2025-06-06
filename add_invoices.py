@@ -1,4 +1,5 @@
 import logging
+from collections import OrderedDict
 
 from api_gateway_client import ApiGatewayClient
 from api_key_manager import ApiKeyManager
@@ -24,37 +25,53 @@ class AddInvoice:
             logging.error("Error al agregar factura: %s", e)
             return {"error": str(e)}
 
+    def agrupar_facturas(self, data_a_facturar: list[dict]):
+        facturas_dict = {}
+        for item in data_a_facturar:
+            numero_factura = item["numeroFactura"]
+            producto = {
+                "codigoProducto": item["codigoProducto"],
+                "nombreProducto": item["nombreProducto"],
+                "descripcionProducto": item["descripcionProducto"],
+                "tipoImpuesto": item["tipoImpuesto"],
+                "cantidadAdquirida": item["cantidadAdquirida"],
+                "precioProducto": item["precioProducto"],
+            }
+            if numero_factura not in facturas_dict:
+                factura = OrderedDict()
+                factura["numeroFactura"] = item.get("numeroFactura", "")
+                factura["documentoIdentidadCliente"] = item.get(
+                    "documentoIdentidadCliente", ""
+                )
+                factura["nombreRazonSocialCliente"] = item.get(
+                    "nombreRazonSocialCliente", ""
+                )
+                factura["correoCliente"] = item.get("correoCliente", "")
+                factura["direccionCliente"] = item.get("direccionCliente", "")
+                factura["telefonoCliente"] = item.get("telefonoCliente", "")
+                factura["productos"] = [producto]
+                factura["tasa_del_dia"] = item.get("tasa_del_dia", "")
+                factura["order_payment_methods"] = [
+                    {
+                        "order_payment_method": item.get("order_payment_method", ""),
+                        "monto": item.get("monto", ""),
+                        "igtf": item.get("igtf", ""),
+                        "banco": item.get("banco", ""),
+                        "telefono_pago_movil": item.get("telefono_pago_movil", ""),
+                        "numero_de_referencia_de_operacion": item.get(
+                            "numero_de_referencia_de_operacion", ""
+                        ),
+                    }
+                ]
+                # Si el campo "order_payment_method" esta vacio dejar el campo order_payment_methods vacio
+                if not factura["order_payment_methods"][0]["order_payment_method"]:
+                    factura["order_payment_methods"] = []
 
-def agrupar_facturas(data_a_facturar):
-    facturas_dict = {}
-    for item in data_a_facturar:
-        numero_factura = item["numeroFactura"]
-        producto = {
-            "codigoProducto": item["codigoProducto"],
-            "nombreProducto": item["nombreProducto"],
-            "descripcionProducto": item["descripcionProducto"],
-            "tipoImpuesto": item["tipoImpuesto"],
-            "cantidadAdquirida": item["cantidadAdquirida"],
-            "precioProducto": item["precioProducto"],
-        }
-        # Campos de factura (sin productos)
-        factura_keys = [
-            "numeroFactura",
-            "documentoIdentidadCliente",
-            "nombreRazonSocialCliente",
-            "correoCliente",
-            "direccionCliente",
-            "telefonoCliente",
-            "tasa_del_dia",
-            "order_payment_methods",
-        ]
-        if numero_factura not in facturas_dict:
-            factura = {k: item[k] for k in factura_keys if k in item}
-            factura["productos"] = [producto]
-            facturas_dict[numero_factura] = factura
-        else:
-            facturas_dict[numero_factura]["productos"].append(producto)
-    return list(facturas_dict.values())
+                facturas_dict[numero_factura] = factura
+            else:
+                facturas_dict[numero_factura]["productos"].append(producto)
+        # Convertir cada OrderedDict a dict antes de regresar
+        return [dict(factura) for factura in facturas_dict.values()]
 
 
 if __name__ == "__main__":
@@ -72,12 +89,17 @@ if __name__ == "__main__":
     oInvoice = AddInvoice(
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_INVOICES"), ApiKeyManager())
     )
+    # Obtiene los datos a facturar
     data_a_facturar = DataFacturacion().get_data_a_facturar()
-    data_a_facturar = data_a_facturar.drop(["enum"], axis=1)
+    columnas_a_eliminar = [
+        "enum",
+        "facturar",
+    ]
+    data_a_facturar = data_a_facturar.drop(columnas_a_eliminar, axis=1)
     data_a_facturar = data_a_facturar.to_dict(orient="records")
 
     # Agrupar por numeroFactura y productos
-    facturas_agrupadas = agrupar_facturas(data_a_facturar)
+    facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
 
     # Ejemplo de POST agregando una factura
     try:
@@ -87,7 +109,7 @@ if __name__ == "__main__":
             "facturas": facturas_agrupadas,
         }
         print("Payload a enviar:", payload)
-        result = oInvoice.add_invoice(payload)
-        print("Respuesta POST:", result)
+        # result = oInvoice.add_invoice(payload)
+        # print("Respuesta POST:", result)
     except Exception as e:
         print("Error en POST:", e)
