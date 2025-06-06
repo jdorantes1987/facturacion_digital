@@ -2,14 +2,14 @@ from api_key_manager import ApiKeyManager
 from api_gateway_client import ApiGatewayClient
 
 
-class UpdateToken:
+class TokenGenerator:
     def __init__(self):
         self.client_api_gateway = ApiGatewayClient(
             url=os.getenv("API_GATEWAY_URL_AUTHENTICATOR"),
             api_key_manager=ApiKeyManager(),
         )
 
-    def update(self):
+    def update_token(self):
         payload = {
             "userName": os.getenv("USER_API"),
             "userPassword": os.getenv("PW_API"),
@@ -29,5 +29,5 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
-    oUpdateToken = UpdateToken()
-    oUpdateToken.update()
+    oTokenGenerator = TokenGenerator()
+    oTokenGenerator.update_token()

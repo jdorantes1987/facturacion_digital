@@ -8,7 +8,7 @@ class GetInvoices:
     def __init__(self, api_gateway_client):
         self.client = api_gateway_client
 
-    def get_invoices(self, params=None):
+    def get_list_invoices(self, params=None):
         try:
             response = self.client.get_data(params)
             return response
@@ -22,9 +22,9 @@ if __name__ == "__main__":
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
     api_key_manager = ApiKeyManager()
     client = ApiGatewayClient(api_url, api_key_manager)
-    invoice_consultant = GetInvoices(client)
+    invoice_consultas = GetInvoices(client)
 
     # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
     params = None
-    result = invoice_consultant.get_invoices(params)
+    result = invoice_consultas.get_list_invoices(params)
     print("Facturas consultadas:", result)

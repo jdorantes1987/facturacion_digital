@@ -104,5 +104,7 @@ class DataFacturacion:
 
 if __name__ == "__main__":
     oDataFacturacion = DataFacturacion()
-    df_a_facturar = oDataFacturacion.get_data_a_facturar()
-    print(df_a_facturar.to_dict(orient="records"))
+    # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
+    params = None
+    result = oDataFacturacion.get_list_invoices(params)
+    print("Facturas consultadas:", result)
