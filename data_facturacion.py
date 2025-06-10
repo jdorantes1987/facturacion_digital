@@ -31,6 +31,7 @@ class DataFacturacion:
             ],  # obtiene la primera fila como encabezados
         )
         cols_montos = [
+            "precioProducto",
             "tasa_del_dia",
             "monto",
             "igtf",
@@ -47,13 +48,14 @@ class DataFacturacion:
             data[cols_montos] = data[cols_montos].apply(
                 to_numeric, errors="raise"  # Convertir a float errores a NaN
             )
-            data["precioProducto"] = data["precioProducto"].str.replace(
-                ".", "", regex=False
-            )  # Eliminar separador de miles
             data["cantidadAdquirida"] = data["cantidadAdquirida"].astype(int)
-            data = data[data["facturar"].str.upper() == "SI"]
+            data = data[
+                (data["facturar"].str.upper() == "SI")
+                & (data["nombreRazonSocialCliente"] != "NO EXISTE")
+                & (data["nombreProducto"] != "NO EXISTE")
+            ]
         except Exception as e:
-            print(f"Error al convertir columnas a numéricas: {e}")
+            print(f"Error en get_data_a_facturar: {e}")
             data = DataFrame()  # Si hay un error, devuelve un DataFrame vacío
 
         return data
