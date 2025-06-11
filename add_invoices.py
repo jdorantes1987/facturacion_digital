@@ -75,44 +75,6 @@ class AddInvoice:
         # Convertir cada OrderedDict a dict antes de regresar
         return [dict(factura) for factura in facturas_dict.values()]
 
-    # Función que permite validar que la función agregar factura tenga los campos requeridos con los tipos de datos correctos
-    def validar_factura(self, factura: dict) -> bool:
-        required_fields = {
-            "numeroFactura": str,
-            "documentoIdentidadCliente": str,
-            "nombreRazonSocialCliente": str,
-            "correoCliente": str,
-            "direccionCliente": str,
-            "telefonoCliente": str,
-            "codigoProducto": str,
-            "nombreProducto": str,
-            "descripcionProducto": str,
-            "tipoImpuesto": str,
-            "cantidadAdquirida": (str, int),
-            "precioProducto": float,
-            "tasa_del_dia": float,
-            "order_payment_method": str,
-            "monto": float,
-            "igtf": float,
-            "banco": str,
-            "telefono_pago_movil": str,
-            "numero_de_referencia_de_operacion": str,
-        }
-
-        # Validar campos requeridos y sus tipos de datos
-        for field, field_type in required_fields.items():
-            if field not in factura:
-                logging.error(f"Campo requerido '{field}' no encontrado en la factura.")
-                return False
-            if not isinstance(factura[field], field_type):
-                logging.error(
-                    f"Tipo de dato incorrecto para el campo '{field}': "
-                    f"esperado {field_type}, recibido {type(factura[field])}."
-                )
-                return False
-
-        return True
-
 
 if __name__ == "__main__":
     import os
@@ -130,35 +92,18 @@ if __name__ == "__main__":
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_INVOICES"), ApiKeyManager())
     )
     # Obtiene los datos a facturar
-    data_a_facturar = DataFacturacion().get_data_a_facturar()
+    data_a_facturar = DataFacturacion().get_data_facturacion().to_dict(orient="records")
+    facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
 
-    # Si no hay datos a facturar, salir
-    if not data_a_facturar.empty:
-        columnas_a_eliminar = [
-            "enum",
-            "facturar",
-        ]
-        data_a_facturar = data_a_facturar.drop(columnas_a_eliminar, axis=1)
-        data_a_facturar = data_a_facturar.to_dict(orient="records")
-
-        # Validar cada factura antes de agrupar
-        for factura in data_a_facturar:
-            if not oInvoice.validar_factura(factura):
-                logging.error(f"Factura inválida: {factura}")
-                continue  # O manejar el error según sea necesario
-
-        # Agrupar por numeroFactura y productos
-        facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
-
-        # Ejemplo de POST agregando una factura
-        try:
-            payload = {
-                "numeroSerie": "A",
-                "cantidadFactura": len(facturas_agrupadas),
-                "facturas": facturas_agrupadas,
-            }
-            print("Payload a enviar:", payload)
-            # result = oInvoice.add_invoice(payload)
-            # print("Respuesta POST:", result)
-        except Exception as e:
-            print("Error en POST:", e)
+    # Ejemplo de POST agregando una factura
+    try:
+        payload = {
+            "numeroSerie": "A",
+            "cantidadFactura": len(facturas_agrupadas),
+            "facturas": facturas_agrupadas,
+        }
+        print("Payload a enviar:", payload)
+        # result = oInvoice.add_invoice(payload)
+        # print("Respuesta POST:", result)
+    except Exception as e:
+        print("Error en POST:", e)
