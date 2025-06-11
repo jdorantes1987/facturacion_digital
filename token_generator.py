@@ -9,7 +9,7 @@ class TokenGenerator:
             api_key_manager=ApiKeyManager(),
         )
 
-    def update_token(self):
+    def update_token(self) -> dict:
         payload = {
             "userName": os.getenv("USER_API"),
             "userPassword": os.getenv("PW_API"),
@@ -20,8 +20,10 @@ class TokenGenerator:
             if "token" in result:
                 self.client_api_gateway.update_token(result["token"])
                 print("Nuevo token guardado en 'api_key.txt'")
+                return dict(success=True, token=result["token"])
         except Exception as e:
             print("Error al actualizar el token:", e)
+            return dict(success=False, error=str(e))
 
 
 if __name__ == "__main__":
@@ -30,4 +32,4 @@ if __name__ == "__main__":
 
     load_dotenv()
     oTokenGenerator = TokenGenerator()
-    oTokenGenerator.update_token()
+    print(oTokenGenerator.update_token())
