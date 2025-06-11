@@ -160,6 +160,13 @@ class DataFacturacion:
                 "facturar",
             ]
             data.drop(columnas_a_eliminar, axis=1, inplace=True)
+            cols_montos = [
+                "cantidadAdquirida",
+                "precioProducto",
+            ]  # Lista de columnas que contienen montos
+            # Reemplazar punto decimal por coma
+            for col in cols_montos:
+                data[col] = data[col].astype(str).str.replace(".", ",", regex=False)
 
         return data
 
