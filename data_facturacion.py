@@ -92,7 +92,7 @@ class DataFacturacion:
                 is_valid_data = False
         return is_valid_data
 
-    def get_facturas_validadas(self) -> DataFrame:
+    def __get_facturas_validadas(self) -> DataFrame:
         data = DataFrame()
         if self.__campos_validados_data_a_facturar():
             data = self.data.copy()
@@ -135,8 +135,8 @@ class DataFacturacion:
                     data = DataFrame()  # Si hay un error, devuelve un DataFrame vacío
         return data
 
-    def get_facturas_validadas_tipos_datos(self) -> DataFrame:
-        data = self.get_facturas_validadas()
+    def __get_facturas_validadas_tipos_datos(self) -> DataFrame:
+        data = self.__get_facturas_validadas()
         is_valid_data = True
         if not data.empty:
             for item_factura in data.to_dict(orient="records"):
@@ -153,7 +153,7 @@ class DataFacturacion:
             return DataFrame()
 
     def get_data_facturacion(self) -> DataFrame:
-        data = self.get_facturas_validadas_tipos_datos()
+        data = self.__get_facturas_validadas_tipos_datos()
         if not data.empty:
             columnas_a_eliminar = [
                 "enum",

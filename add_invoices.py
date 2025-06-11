@@ -6,6 +6,7 @@ from api_key_manager import ApiKeyManager
 
 
 class AddInvoice:
+
     def __init__(self, api_gateway_client):
         self.client = api_gateway_client
 
