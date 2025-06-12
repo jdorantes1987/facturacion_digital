@@ -1,4 +1,5 @@
 import sys
+from pandas import DataFrame
 
 sys.path.append("..\\profit")
 from data.mod.ventas.clientes import Clientes
@@ -8,7 +9,7 @@ class ClientesProfit:
     def __init__(self, conexion):
         self.clientes = Clientes(conexion)
 
-    def get_clientes(self):
+    def get_clientes(self) -> DataFrame:
         return self.clientes.get_clientes_profit()
 
 
