@@ -1,7 +1,7 @@
 import logging
-
 import gspread
-from googleapiclient.discovery import build
+
+
 from oauth2client.service_account import ServiceAccountCredentials
 from pandas import DataFrame, to_numeric
 
@@ -32,32 +32,36 @@ required_fields = {
 
 class DataFacturacion:
 
-    def __init__(self):
+    def __init__(self, file_sheet_name, spreadsheet_id, sheet_name, credentials_file):
+
+        self.file_sheet_name = file_sheet_name
+        self.spreadsheet_id = spreadsheet_id
+        self.sheet_name = sheet_name
+        self.credentials_file = credentials_file
+        self.spreadsheet = self._get_spreadsheet()
+        self.data = DataFrame()
+
+    def _get_spreadsheet(self):
         # Autenticación y acceso a Google Sheets
         self.scope = [
             "https://spreadsheets.google.com/feeds",
             "https://www.googleapis.com/auth/drive",
         ]
         self.creds = ServiceAccountCredentials.from_json_keyfile_name(
-            "key.json", self.scope
+            self.credentials_file, self.scope
         )
         client = gspread.authorize(self.creds)
-        self.spreadsheet = client.open("facturacion_cgimprenta")
-
-        # Construir el servicio de la API de Google Sheets
-        self.sheet_service = build("sheets", "v4", credentials=self.creds)
-        self.data = DataFrame()
+        return client.open(self.file_sheet_name)
 
     def __data_a_facturar(self):
         try:
-            # Selecciona la hoja de Google Sheets
-            worksheet = self.spreadsheet.worksheet("facturacion")
+            # Selecciona la hoja de Google Sheets usando gspread
+            worksheet = self.spreadsheet.worksheet(self.sheet_name)
             # Obtiene todos los valores de la hoja de cálculo
+            all_values = worksheet.get_all_values()
             data = DataFrame(
-                worksheet.get_all_values()[1:],  # ignora la primera fila de encabezados
-                columns=worksheet.get_all_values()[
-                    0
-                ],  # obtiene la primera fila como encabezados
+                all_values[1:],  # ignora la primera fila de encabezados
+                columns=all_values[0],  # obtiene la primera fila como encabezados
             )
             self.data = data
         except Exception as e:
@@ -215,8 +219,18 @@ class DataFacturacion:
 
 
 if __name__ == "__main__":
-    oDataFacturacion = DataFacturacion()
-    # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
-    params = None
+    import os
+
+    from dotenv import load_dotenv
+
+    load_dotenv()
+    FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
+    SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
+    SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")
+    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    oDataFacturacion = DataFacturacion(
+        FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
+    )
     result = oDataFacturacion.get_data_facturacion()
     print("Facturas consultadas:", result)
