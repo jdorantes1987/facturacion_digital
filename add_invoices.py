@@ -93,7 +93,18 @@ if __name__ == "__main__":
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_INVOICES"), ApiKeyManager())
     )
     # Obtiene los datos a facturar
-    data_a_facturar = DataFacturacion().get_data_facturacion().to_dict(orient="records")
+    FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
+    SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
+    SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")
+    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    data_a_facturar = (
+        DataFacturacion(
+            FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
+        )
+        .get_data_facturacion()
+        .to_dict(orient="records")
+    )
     facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
 
     # Ejemplo de POST agregando una factura
