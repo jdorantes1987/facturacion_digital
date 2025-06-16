@@ -19,6 +19,8 @@ class ApiGatewayClient:
     def post_data(self, payload):
         headers = self.get_headers()
         response = requests.post(self.url, headers=headers, json=payload)
+        if response.status_code == 400:
+            return response.content.decode("utf-8")
         response.raise_for_status()
         return response.json()
 
