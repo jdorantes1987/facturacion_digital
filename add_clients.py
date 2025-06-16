@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     from data_facturacion import DataFacturacion
 
-    load_dotenv()
+    load_dotenv(override=True)
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
     )

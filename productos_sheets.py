@@ -49,7 +49,7 @@ class ProductosSheetManager:
             }
         )
         if not data.empty:
-            data["precio"] = 0.0
+            data["precio"] = 1.0
             data = data[column_dev_data]
 
             # actualizar la hoja de Google Sheets con los datos de clientes desde la fila 2

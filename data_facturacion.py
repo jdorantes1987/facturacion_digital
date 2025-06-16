@@ -221,7 +221,7 @@ if __name__ == "__main__":
 
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(override=True)
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")

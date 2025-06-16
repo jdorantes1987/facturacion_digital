@@ -30,6 +30,6 @@ if __name__ == "__main__":
     import os
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(override=True)
     oTokenGenerator = TokenGenerator()
     print(oTokenGenerator.update_token())

@@ -18,7 +18,7 @@ class GetInvoices:
 
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_dotenv(override=True)  # Recarga las variables de entorno desde el archivo
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
     api_key_manager = ApiKeyManager()
     client = ApiGatewayClient(api_url, api_key_manager)
