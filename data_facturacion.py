@@ -27,6 +27,7 @@ required_fields = {
     "telefono_pago_movil": str,
     "numero_de_referencia_de_operacion": str,
     "facturar": str,
+    "incluir": str,
 }
 
 
@@ -128,11 +129,7 @@ class DataFacturacion:
                     data[cols_montos] = data[cols_montos].apply(
                         to_numeric, errors="raise"  # Convertir a float errores a NaN
                     )
-                    data = data[
-                        (data["facturar"].str.upper() == "SI")
-                        & (data["nombreRazonSocialCliente"] != "NO EXISTE")
-                        & (data["nombreProducto"] != "NO EXISTE")
-                    ]
+                    data = data[(data["facturar"].str.upper() == "SI")]
                     data["enum"] = data["enum"].astype(int)
                 except Exception as e:
                     print(f"Error en obtener_facturas_validadas: {e}")
@@ -161,6 +158,7 @@ class DataFacturacion:
         if not data.empty:
             columnas_a_eliminar = [
                 "enum",
+                "incluir",
                 "facturar",
             ]
             data.drop(columnas_a_eliminar, axis=1, inplace=True)
