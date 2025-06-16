@@ -230,5 +230,5 @@ if __name__ == "__main__":
     oDataFacturacion = DataFacturacion(
         FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
     )
-    result = oDataFacturacion.get_data_facturacion()
-    print("Facturas consultadas:", result)
+    result = oDataFacturacion.get_data_productos()
+    print("Datos consultados:", result)
