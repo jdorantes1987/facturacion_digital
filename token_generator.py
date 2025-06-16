@@ -32,4 +32,4 @@ if __name__ == "__main__":
 
     load_dotenv(override=True)
     oTokenGenerator = TokenGenerator()
-    print(oTokenGenerator.update_token())
+    oTokenGenerator.update_token()
