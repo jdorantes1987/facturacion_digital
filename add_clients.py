@@ -36,15 +36,20 @@ if __name__ == "__main__":
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
+    FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
+    SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
+    SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")
+    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
     oClients = AddClients(
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_CLIENTES"), ApiKeyManager())
     )
+    oDataFacturacion = DataFacturacion(
+        FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
+    )
     # Ejemplo de POST agregando un cliente
     try:
-        # Obtiene los primeros 3 clientes de DataFacturacion y los convierte a dict
-        clientes = (
-            DataFacturacion().get_data_clientes().head(1).to_dict(orient="records")
-        )
+        clientes = oDataFacturacion.get_data_clientes().to_dict(orient="records")
         # Asignar la clave "clientes" al dict
         payload = {"clientes": clientes}
         result = oClients.add_client(payload)  # Envía el dict, no el string
