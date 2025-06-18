@@ -6,6 +6,7 @@ __pycache__/
 # archive files
 api_key.txt 
 key.json
+cg_imprenta
 
 # C extensions
 *.so
