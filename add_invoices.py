@@ -67,8 +67,8 @@ class AddInvoice:
                 # Si el campo "order_payment_method" esta vacio dejar el campo order_payment_methods vacio
                 if not factura["order_payment_methods"][0]["order_payment_method"]:
                     factura["order_payment_methods"] = []
-                    # eliminar clave "tasa_del_dia"
-                    factura.pop("tasa_del_dia", None)
+                    ## eliminar clave "tasa_del_dia"
+                    # factura.pop("tasa_del_dia", None)
 
                 facturas_dict[numero_factura] = factura
             else:
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     from data_facturacion import DataFacturacion
 
-    load_dotenv()
+    load_dotenv(override=True)
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
     )
@@ -92,6 +92,7 @@ if __name__ == "__main__":
     oInvoice = AddInvoice(
         ApiGatewayClient(os.getenv("API_GATEWAY_URL_INVOICES"), ApiKeyManager())
     )
+    print(os.getenv("API_GATEWAY_URL_INVOICES"))
     # Obtiene los datos a facturar
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
@@ -114,8 +115,8 @@ if __name__ == "__main__":
             "cantidadFactura": len(facturas_agrupadas),
             "facturas": facturas_agrupadas,
         }
-        print("Payload a enviar:", payload)
         # result = oInvoice.add_invoice(payload)
         # print("Respuesta POST:", result)
+        print("Payload a enviar:", payload)
     except Exception as e:
         print("Error en POST:", e)
