@@ -162,6 +162,10 @@ class DataFacturacion:
                 "facturar",
             ]
             data.drop(columnas_a_eliminar, axis=1, inplace=True)
+            # Une las columnas "nombreProducto" y "descripcionProducto" según solicitud
+            data["descripcionProducto"] = (
+                data["nombreProducto"] + " - " + data["descripcionProducto"]
+            )
             cols_montos = [
                 "cantidadAdquirida",
                 "precioProducto",
