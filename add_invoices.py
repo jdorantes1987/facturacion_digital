@@ -115,8 +115,8 @@ if __name__ == "__main__":
             "cantidadFactura": len(facturas_agrupadas),
             "facturas": facturas_agrupadas,
         }
-        # result = oInvoice.add_invoice(payload)
-        # print("Respuesta POST:", result)
-        print("Payload a enviar:", payload)
+        result = oInvoice.add_invoice(payload)
+        print("Respuesta POST:", result)
+        # print("Payload a enviar:", payload)
     except Exception as e:
         print("Error en POST:", e)
