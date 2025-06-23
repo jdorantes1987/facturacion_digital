@@ -50,6 +50,10 @@ if __name__ == "__main__":
     invoice_consultas = GetInvoices(client)
 
     # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
-    params = None
+    params = {
+        "fechaInicio": "2025-06-18",  # Fecha de inicio del rango
+        "fechaFin": "2025-06-20",  # Fecha de fin del rango
+    }
     result = invoice_consultas.get_data_invoices(params).to_string(index=False)
+
     print("Facturas consultadas:", result)
