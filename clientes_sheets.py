@@ -1,5 +1,6 @@
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+
 from clientes_profit import ClientesProfit
 
 
@@ -30,9 +31,9 @@ class ClientesSheetManager:
     def update_clientes_sheet(self, conexion):
         self.clear_clientes_data()
         oClientesProfit = ClientesProfit(conexion=conexion)
-        data = oClientesProfit.get_clientes()[
-            ["rif", "cli_des", "email", "telefonos", "direc1"]
-        ]
+        data = oClientesProfit.get_clientes()
+        data = data[data["inactivo"] == 0]  # Filtrar clientes no anulados
+        data = data[["rif", "cli_des", "email", "telefonos", "direc1"]]
         if not data.empty:
             # actualizar la hoja de Google Sheets con los datos de clientes desde la fila 2
             self.service.spreadsheets().values().update(
@@ -46,14 +47,17 @@ class ClientesSheetManager:
 if __name__ == "__main__":
     import os
 
-    from conn.conexion import DatabaseConnector
+    from conn.database_connector import DatabaseConnector
+    from conn.sql_server_connector import SQLServerConnector
     from dotenv import load_dotenv
 
     load_dotenv(override=True)
     # Para SQL Server
-    datos_conexion = dict(
-        host=os.environ["HOST_PRODUCCION_PROFIT"],
-        base_de_datos=os.environ["DB_NAME_DERECHA_PROFIT"],
+    sqlserver_connector = SQLServerConnector(
+        host=os.getenv("HOST_PRODUCCION_PROFIT"),
+        database=os.getenv("DB_NAME_DERECHA_PROFIT"),
+        user=os.getenv("DB_USER_PROFIT"),
+        password=os.getenv("DB_PASSWORD_PROFIT"),
     )
 
     # Usa variables de entorno o reemplaza por tus valores
@@ -65,8 +69,8 @@ if __name__ == "__main__":
         SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
     )
     try:
-        oConexion = DatabaseConnector(db_type="sqlserver", **datos_conexion)
-        oClientesManager.update_clientes_sheet(oConexion)
+        db = DatabaseConnector(sqlserver_connector)
+        oClientesManager.update_clientes_sheet(db)
         print("Hoja de clientes actualizada correctamente.")
     except Exception as e:
         print(f"Error al actualizar la hoja de clientes: {e}")
