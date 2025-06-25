@@ -32,7 +32,9 @@ class ClientesSheetManager:
         self.clear_clientes_data()
         oClientesProfit = ClientesProfit(conexion=conexion)
         data = oClientesProfit.get_clientes()
-        data = data[data["inactivo"] == 0]  # Filtrar clientes no anulados
+        data = data[
+            (data["inactivo"] == 0) & (data["tipo_adi"] <= 2)
+        ]  # Filtrar clientes no anulados y los que no son sucursales
         data = data[["rif", "cli_des", "email", "telefonos", "direc1"]]
         if not data.empty:
             # actualizar la hoja de Google Sheets con los datos de clientes desde la fila 2
