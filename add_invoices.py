@@ -1,14 +1,18 @@
 import logging
+import logging.config
 from collections import OrderedDict
 
 from api_gateway_client import ApiGatewayClient
 from api_key_manager import ApiKeyManager
+
+logging.config.fileConfig("logging.ini")
 
 
 class AddInvoice:
 
     def __init__(self, api_gateway_client):
         self.client = api_gateway_client
+        self.logger = logging.getLogger(__class__.__name__)
 
     def add_invoice(self, invoice_data) -> dict:
         try:
@@ -23,7 +27,7 @@ class AddInvoice:
             response = self.client.post_data(invoice_data)
             return response
         except Exception as e:
-            logging.error("Error al agregar factura: %s", e)
+            self.logger.error(f"Error al agregar factura: %s {e}", exc_info=True)
             return {"error": str(e)}
 
     def agrupar_facturas(self, data_a_facturar: list[dict]):
@@ -116,7 +120,7 @@ if __name__ == "__main__":
             "facturas": facturas_agrupadas,
         }
         result = oInvoice.add_invoice(payload)
-        print("Respuesta POST:", result)
+        oInvoice.logger.info(f"Respuesta POST: {result}")
         # print("Payload a enviar:", payload)
     except Exception as e:
-        print("Error en POST:", e)
+        oInvoice.logger.error(f"Error en POST: %s {e}", exc_info=True)
