@@ -2,22 +2,14 @@ import logging
 import logging.config
 import time
 
-from clientes_sheets import ClientesSheetManager
-
 logging.config.fileConfig("logging.ini")
 
 
 class MonitoreoClientes:
-    def __init__(self, conexion):
+    def __init__(self, conexion, clientes_sheet_manager=None):
         self.db = conexion
-        # Usa variables de entorno o reemplaza por tus valores
-        SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
-        SHEET_NAME = os.getenv("GOOGLE_SHEET_CLIENTES_NAME", "clientes")
-        CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-        self.oClientesManager = ClientesSheetManager(
-            SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
-        )
+        self.logger = logging.getLogger(__class__.__name__)
+        self.oClientesManager = clientes_sheet_manager
 
     def __get_cursor(self):
         return self.db.get_cursor()
@@ -28,7 +20,7 @@ class MonitoreoClientes:
         cursor.execute("SELECT MAX(validador) FROM saCliente")
         ultima_version = cursor.fetchone()[0] or b"\x00" * 8  # valor binario inicial
 
-        logging.info("Monitoreando cambios...")
+        self.logger.info("Monitoreando cambios...")
 
         while True:
             time.sleep(5)
@@ -39,9 +31,9 @@ class MonitoreoClientes:
             cambios = cursor.fetchall()
 
             if cambios:
-                logging.info(f"Se detectaron {len(cambios)} cambios:")
+                self.logger.info(f"Se detectaron {len(cambios)} cambios:")
                 for fila in cambios:
-                    logging.info(
+                    self.logger.info(
                         fila[0] + " " + fila[2] + " " + fila[70] + " " + str(fila[71])
                     )
 
@@ -54,9 +46,11 @@ class MonitoreoClientes:
         try:
             db = self.db
             self.oClientesManager.update_clientes_sheet(db)
-            logging.info("Sheet de clientes actualizada correctamente.")
+            self.logger.info("Sheet de clientes actualizada correctamente.")
         except Exception as e:
-            logging.error(f"Error al actualizar sheet de clientes: {e}", exc_info=True)
+            self.logger.error(
+                f"Error al actualizar sheet de clientes: {e}", exc_info=True
+            )
 
 
 if __name__ == "__main__":
@@ -64,6 +58,7 @@ if __name__ == "__main__":
     import sys
 
     from dotenv import load_dotenv
+    from clientes_sheets import ClientesSheetManager
 
     sys.path.append("..\\profit")
     from conn.database_connector import DatabaseConnector
@@ -78,6 +73,14 @@ if __name__ == "__main__":
         user=os.environ["DB_USER_PROFIT"],
         password=os.environ["DB_PASSWORD_PROFIT"],
     )
+
+    # Para Google Sheets
+    SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
+    SHEET_NAME = os.getenv("GOOGLE_SHEET_CLIENTES_NAME", "clientes")
+    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    clientes_sheet_manager = ClientesSheetManager(
+        SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
+    )
     db = DatabaseConnector(sqlserver_connector)
-    oMonitoreoClientes = MonitoreoClientes(db)
+    oMonitoreoClientes = MonitoreoClientes(db, clientes_sheet_manager)
     oMonitoreoClientes.monitorear_cambios()
