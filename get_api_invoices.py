@@ -1,10 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from pandas import DataFrame, to_numeric
-
-from api_gateway_client import ApiGatewayClient
-from api_key_manager import ApiKeyManager
+from pandas import DataFrame
 
 
 class GetInvoices:
@@ -41,15 +38,21 @@ class GetInvoices:
             return DataFrame()
         return DataFrame(data_json)
 
-    def get_last_invoice(self, params=None):
+    def get_last_invoice(self, params=None) -> str:
         """
         Obtiene el máximo número de factura.
         """
-        return self.get_data_invoices(params=params)["invoice_number"].max()
+        data = self.get_data_invoices(params=params)
+        if not data.empty:
+            return data["invoice_number"].max()
+        return None
 
 
 if __name__ == "__main__":
     from datetime import date
+
+    from api_gateway_client import ApiGatewayClient
+    from api_key_manager import ApiKeyManager
 
     load_dotenv(override=True)  # Recarga las variables de entorno desde el archivo
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
