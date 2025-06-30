@@ -15,19 +15,21 @@ class ArticulosProfit:
 if __name__ == "__main__":
     import os
 
-    from conn.conexion import DatabaseConnector
     from dotenv import load_dotenv
 
+    from conn.database_connector import DatabaseConnector
+    from conn.sql_server_connector import SQLServerConnector
+
     load_dotenv(override=True)
+
     # Para SQL Server
-    datos_conexion = dict(
+    sqlserver_connector = SQLServerConnector(
         host=os.environ["HOST_PRODUCCION_PROFIT"],
-        base_de_datos=os.environ["DB_NAME_DERECHA_PROFIT"],
+        database=os.environ["DB_NAME_DERECHA_PROFIT"],
+        user=os.environ["DB_USER_PROFIT"],
+        password=os.environ["DB_PASSWORD_PROFIT"],
     )
-    try:
-        oConexion = DatabaseConnector(db_type="sqlserver", **datos_conexion)
-        oArticulosProfit = ArticulosProfit(oConexion)
-        articulos = oArticulosProfit.get_articulos()
-        print(articulos)
-    except Exception as e:
-        print(f"Error al obtener articulos: {e}")
+    db = DatabaseConnector(sqlserver_connector)
+    oArticulosProfit = ArticulosProfit(db)
+    articulos = oArticulosProfit.get_articulos()
+    print(articulos)
