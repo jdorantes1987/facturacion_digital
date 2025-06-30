@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from pandas import DataFrame
+from pandas import DataFrame, to_numeric
 
 from api_gateway_client import ApiGatewayClient
 from api_key_manager import ApiKeyManager
@@ -41,6 +41,12 @@ class GetInvoices:
             return DataFrame()
         return DataFrame(data_json)
 
+    def get_last_invoice(self, params=None):
+        """
+        Obtiene el máximo número de factura.
+        """
+        return self.get_data_invoices(params=params)["invoice_number"].max()
+
 
 if __name__ == "__main__":
     from datetime import date
@@ -55,11 +61,9 @@ if __name__ == "__main__":
 
     # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
     params = {
-        "fechaInicio": "2025-01-01",  # Fecha de inicio del rango
+        "fechaInicio": "2025-06-20",  # Fecha de inicio del rango
         "fechaFin": hoy,  # Fecha de fin del rango
     }
-    result = invoice_consultas.get_data_invoices(params).to_excel(
-        "facturas_consultadas.xlsx", index=False
-    )
+    result = invoice_consultas.get_last_invoice(params)
 
-    print("Facturas consultadas:", result)
+    print("Resultado:", result)
