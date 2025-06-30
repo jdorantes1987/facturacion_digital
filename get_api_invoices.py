@@ -43,17 +43,23 @@ class GetInvoices:
 
 
 if __name__ == "__main__":
+    from datetime import date
+
     load_dotenv(override=True)  # Recarga las variables de entorno desde el archivo
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
     api_key_manager = ApiKeyManager()
     client = ApiGatewayClient(api_url, api_key_manager)
     invoice_consultas = GetInvoices(client)
 
+    hoy = date.today().strftime("%Y-%m-%d")
+
     # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
     params = {
         "fechaInicio": "2025-01-01",  # Fecha de inicio del rango
-        "fechaFin": "2025-06-26",  # Fecha de fin del rango
+        "fechaFin": hoy,  # Fecha de fin del rango
     }
-    result = invoice_consultas.get_data_invoices(params).to_string(index=False)
+    result = invoice_consultas.get_data_invoices(params).to_excel(
+        "facturas_consultadas.xlsx", index=False
+    )
 
     print("Facturas consultadas:", result)
