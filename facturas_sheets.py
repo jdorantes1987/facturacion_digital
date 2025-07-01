@@ -18,20 +18,27 @@ class FacturasSheetManager:
         return build("sheets", "v4", credentials=creds)
 
     def clear_facturas_data(self):
+        # Define los rangos a limpiar
         ranges_to_clear = [
             f"{self.sheet_name}!B2:B1000",  # Factura Number
             f"{self.sheet_name}!C2:C1000",  # Rif
             f"{self.sheet_name}!H2:H1000",  # Codigo Producto
             f"{self.sheet_name}!J2:J1000",  # Comentario
             f"{self.sheet_name}!M2:M1000",  # Monto
+            f"{self.sheet_name}!L2:L1000",  # Total Articulo
         ]
-        for range_to_clear in ranges_to_clear:
-            request = (
-                self.service.spreadsheets()
-                .values()
-                .clear(spreadsheetId=self.spreadsheet_id, range=range_to_clear, body={})
-            )
-            request.execute()
+        # Usa batchClear para limpiar todos los rangos en una sola llamada
+        self.service.spreadsheets().values().batchClear(
+            spreadsheetId=self.spreadsheet_id, body={"ranges": ranges_to_clear}
+        ).execute()
+        # Escribir False en toda la columna U2:U1000
+        values = [[False] for _ in range(999)]
+        self.service.spreadsheets().values().update(
+            spreadsheetId=self.spreadsheet_id,
+            range=f"{self.sheet_name}!U2:U1000",
+            valueInputOption="USER_ENTERED",
+            body={"values": values},
+        ).execute()
         return True
 
     def update_facturas_sheet(self, data_facturas_a_validar: DataFrame):
