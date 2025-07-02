@@ -67,6 +67,6 @@ if __name__ == "__main__":
         "fechaInicio": "2025-06-20",  # Fecha de inicio del rango
         "fechaFin": hoy,  # Fecha de fin del rango
     }
-    result = invoice_consultas.get_last_invoice(params)
+    result = invoice_consultas.get_data_invoices(params=params)
 
     print("Resultado:", result)
