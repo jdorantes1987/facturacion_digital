@@ -1,14 +1,14 @@
 import sys
 
-from pandas import DataFrame
 from numpy import nan
+from pandas import DataFrame
 
 from get_api_invoices import GetInvoices
 
 sys.path.append("..\\profit")
 from data.mod.ventas import documentos
-from data.mod.ventas.facturas_ventas import FacturasVentas
 from data.mod.ventas.clientes import Clientes
+from data.mod.ventas.facturas_ventas import FacturasVentas
 
 
 class SincronizaFacturacion:
@@ -34,16 +34,6 @@ class SincronizaFacturacion:
         if facturas_imprenta.empty:
             return set()
         return set(facturas_imprenta["invoice_number"].str.strip())
-
-    def __diferencias_profit_vs_imprenta(self, params=None):
-        set_profit = self.__set_facturas_profit(params=params)
-        set_imprenta = self.__set_facturas_imprenta(params=params)
-        return set_profit.difference(set_imprenta)
-
-    def __diferencias_imprenta_vs_profit(self, params=None):
-        set_profit = self.__set_facturas_profit(params=params)
-        set_imprenta = self.__set_facturas_imprenta(params=params)
-        return set_imprenta.difference(set_profit)
 
     def data_a_validar_en_sheet(self, params=None) -> DataFrame:
         # Campos a validar en Sheet
@@ -94,8 +84,10 @@ if __name__ == "__main__":
 
     from api_gateway_client import ApiGatewayClient
     from api_key_manager import ApiKeyManager
+    from token_generator import TokenGenerator
 
     load_dotenv(override=True)
+    TokenGenerator().update_token()
 
     # Para SQL Server
     sqlserver_connector = SQLServerConnector(
