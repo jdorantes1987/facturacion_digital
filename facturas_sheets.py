@@ -106,12 +106,14 @@ if __name__ == "__main__":
     from api_gateway_client import ApiGatewayClient
     from api_key_manager import ApiKeyManager
     from sincroniza_facturacion import SincronizaFacturacion
+    from token_generator import TokenGenerator
 
     sys.path.append("..\\profit")
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
     load_dotenv(override=True)
+    TokenGenerator().update_token()
     # Para SQL Server
     sqlserver_connector = SQLServerConnector(
         host=os.getenv("HOST_PRODUCCION_PROFIT"),
