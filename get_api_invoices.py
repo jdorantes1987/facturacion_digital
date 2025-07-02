@@ -1,6 +1,3 @@
-import os
-
-from dotenv import load_dotenv
 from pandas import DataFrame
 
 
@@ -49,7 +46,10 @@ class GetInvoices:
 
 
 if __name__ == "__main__":
+    import os
     from datetime import date
+
+    from dotenv import load_dotenv
 
     from api_gateway_client import ApiGatewayClient
     from api_key_manager import ApiKeyManager

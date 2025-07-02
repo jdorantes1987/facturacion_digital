@@ -1,12 +1,14 @@
-from api_key_manager import ApiKeyManager
+import os
+
 from api_gateway_client import ApiGatewayClient
+from api_key_manager import ApiKeyManager
 
 
 class TokenGenerator:
-    def __init__(self):
+    def __init__(self, path_api_key="api_key.txt"):
         self.client_api_gateway = ApiGatewayClient(
             url=os.getenv("API_GATEWAY_URL_AUTHENTICATOR"),
-            api_key_manager=ApiKeyManager(),
+            api_key_manager=ApiKeyManager(filepath=path_api_key),
         )
 
     def update_token(self) -> dict:
@@ -27,7 +29,6 @@ class TokenGenerator:
 
 
 if __name__ == "__main__":
-    import os
     from dotenv import load_dotenv
 
     load_dotenv(override=True)
