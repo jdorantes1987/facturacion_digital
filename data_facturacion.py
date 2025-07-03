@@ -167,7 +167,6 @@ class DataFacturacion:
                 data["nombreProducto"] + " - " + data["descripcionProducto"]
             )
             cols_montos = [
-                "cantidadAdquirida",
                 "precioProducto",
             ]  # Lista de columnas que contienen montos
             # Reemplazar punto decimal por coma
