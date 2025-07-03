@@ -43,7 +43,7 @@ class SincronizaFacturacion:
             "fec_emis",
             "co_art",
             "total_art",
-            "reng_neto",
+            "prec_vta",
             "comentario",
         ]
         # Conjuntos de facturas de Profit e Imprenta

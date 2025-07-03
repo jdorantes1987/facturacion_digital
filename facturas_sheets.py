@@ -53,7 +53,7 @@ class FacturasSheetManager:
                 "co_art",
                 "comentario",
                 "total_art",
-                "reng_neto",
+                "prec_vta",
             ]
             values = data[columnas].values.tolist()
 
