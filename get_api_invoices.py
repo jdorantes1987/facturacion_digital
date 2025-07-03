@@ -33,7 +33,13 @@ class GetInvoices:
             data_json = [data_json]
         if not isinstance(data_json, list):
             return DataFrame()
-        return DataFrame(data_json)
+        data = DataFrame(data_json)
+
+        # Cambia la URL del PDF de la factura para que apunte a la vista previa
+        data["invoice_pdf"] = data["invoice_pdf"].replace(
+            r"readonly/export_pdf", "readonly/invoice/preview", regex=True
+        )
+        return data
 
     def get_last_invoice(self, params=None) -> str:
         """
@@ -69,4 +75,4 @@ if __name__ == "__main__":
     }
     result = invoice_consultas.get_data_invoices(params=params)
 
-    print("Resultado:", result)
+    print("Resultado:", result.to_string(index=False))
