@@ -51,6 +51,10 @@ class SincronizaFacturacion:
         ]
         # Conjuntos de facturas de Profit e Imprenta
         set_profit = self.__set_facturas_profit(params=params)
+        # si existe la clave "000046" en set_profit, eliminarla
+        if "000046" in set_profit:
+            set_profit.remove("000046")
+
         set_imprenta = self.__set_facturas_imprenta(params=params)
         # Obtener las diferencias entre Profit e Imprenta
         diferencias = set_profit.difference(set_imprenta)
