@@ -87,8 +87,13 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     from data_facturacion import DataFacturacion
+    from token_generator import TokenGenerator
 
     load_dotenv(override=True)
+
+    # Actualiza el token de autenticación
+    TokenGenerator().update_token()
+
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
     )
