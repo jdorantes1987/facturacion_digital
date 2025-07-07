@@ -75,4 +75,4 @@ if __name__ == "__main__":
     }
     result = invoice_consultas.get_data_invoices(params=params)
 
-    print("Resultado:", result.to_string(index=False))
+    print("Resultado:", result.to_excel("result.xlsx", index=False))

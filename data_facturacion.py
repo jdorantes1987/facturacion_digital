@@ -1,9 +1,8 @@
 import logging
-import gspread
 
-
-from oauth2client.service_account import ServiceAccountCredentials
 from pandas import DataFrame, to_numeric
+
+from data_sheets import ManagerSheets
 
 required_fields = {
     "enum": int,
@@ -33,41 +32,16 @@ required_fields = {
 
 class DataFacturacion:
 
-    def __init__(self, file_sheet_name, spreadsheet_id, sheet_name, credentials_file):
-
-        self.file_sheet_name = file_sheet_name
-        self.spreadsheet_id = spreadsheet_id
-        self.sheet_name = sheet_name
-        self.credentials_file = credentials_file
-        self.spreadsheet = self._get_spreadsheet()
+    def __init__(self, spreadsheet_id, sheet_name, credentials_file):
+        self.manager_sheets = ManagerSheets(
+            file_sheet_name=sheet_name,
+            spreadsheet_id=spreadsheet_id,
+            credentials_file=credentials_file,
+        )
         self.data = DataFrame()
 
-    def _get_spreadsheet(self):
-        # Autenticación y acceso a Google Sheets
-        self.scope = [
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/drive",
-        ]
-        self.creds = ServiceAccountCredentials.from_json_keyfile_name(
-            self.credentials_file, self.scope
-        )
-        client = gspread.authorize(self.creds)
-        return client.open(self.file_sheet_name)
-
     def __data_a_facturar(self):
-        try:
-            # Selecciona la hoja de Google Sheets usando gspread
-            worksheet = self.spreadsheet.worksheet(self.sheet_name)
-            # Obtiene todos los valores de la hoja de cálculo
-            all_values = worksheet.get_all_values()
-            data = DataFrame(
-                all_values[1:],  # ignora la primera fila de encabezados
-                columns=all_values[0],  # obtiene la primera fila como encabezados
-            )
-            self.data = data
-        except Exception as e:
-            logging.error(f"Error al obtener datos de facturación: {e}")
-            self.data = DataFrame()
+        self.data = self.manager_sheets.get_data_hoja(sheet_name="facturacion")
 
     def __validar_campos_requeridos(self, data: list) -> bool:
         # Validar campos requeridos
@@ -177,26 +151,11 @@ class DataFacturacion:
 
     def get_data_clientes(self) -> DataFrame:
         # Selecciona la hoja de Google Sheets
-        worksheet = self.spreadsheet.worksheet("clientes")
-        # Obtiene todos los valores de la hoja de cálculo
-        data = DataFrame(
-            worksheet.get_all_values()[1:],  # ignora la primera fila de encabezados
-            columns=worksheet.get_all_values()[
-                0
-            ],  # obtiene la primera fila como encabezados
-        )
-        return data
+        return self.manager_sheets.get_data_hoja(sheet_name="clientes")
 
     def get_data_productos(self) -> DataFrame:
         # Selecciona la hoja de Google Sheets
-        worksheet = self.spreadsheet.worksheet("productos")
-        # Obtiene todos los valores de la hoja de cálculo
-        data = DataFrame(
-            worksheet.get_all_values()[1:],  # ignora la primera fila de encabezados
-            columns=worksheet.get_all_values()[
-                0
-            ],  # obtiene la primera fila como encabezados
-        )
+        data = self.manager_sheets.get_data_hoja(sheet_name="productos")
         cols_montos = [
             "precio",
         ]  # Lista de columnas que contienen montos
@@ -227,11 +186,10 @@ if __name__ == "__main__":
     load_dotenv(override=True)
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
-    SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")
     CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
     oDataFacturacion = DataFacturacion(
-        FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
+        SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE
     )
     result = oDataFacturacion.get_data_facturacion()
     print("Datos consultados:", result)

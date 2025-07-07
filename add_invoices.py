@@ -100,13 +100,10 @@ if __name__ == "__main__":
     # Obtiene los datos a facturar
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
-    SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME")
     CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
     data_a_facturar = (
-        DataFacturacion(
-            FILE_FACTURACION_NAME, SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE
-        )
+        DataFacturacion(SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE)
         .get_data_facturacion()
         .to_dict(orient="records")
     )
@@ -119,8 +116,8 @@ if __name__ == "__main__":
             "cantidadFactura": len(facturas_agrupadas),
             "facturas": facturas_agrupadas,
         }
-        result = oInvoice.add_invoice(payload)
-        oInvoice.logger.info(f"Respuesta POST: {result}")
-        # print("Payload a enviar:", payload)
+        # result = oInvoice.add_invoice(payload)
+        # oInvoice.logger.info(f"Respuesta POST: {result}")
+        print("Payload a enviar:", payload)
     except Exception as e:
         oInvoice.logger.error(f"Error en POST: %s {e}", exc_info=True)
