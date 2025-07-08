@@ -33,9 +33,9 @@ class SincronizaFacturacion:
         facturas_imprenta = oGetInvoices.get_data_invoices(params=params)
         if facturas_imprenta.empty:
             return set()
-        facturas_imprenta = facturas_imprenta[
-            facturas_imprenta["document"] == "FACTURA"
-        ]
+        # facturas_imprenta = facturas_imprenta[
+        #     facturas_imprenta["document"] == "FACTURA"
+        # ]
         return set(facturas_imprenta["invoice_number"].str.strip())
 
     def data_a_validar_en_sheet(self, params=None) -> DataFrame:
