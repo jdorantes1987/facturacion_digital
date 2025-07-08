@@ -87,7 +87,7 @@ class FacturasSheetManager:
                     },
                     {
                         "range": f"{self.sheet_name}!U2:U{len(values)+1}",
-                        "values": [[True] for _ in values],
+                        "values": [[False] for _ in values],
                     },
                 ],
             }
