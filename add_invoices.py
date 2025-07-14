@@ -92,7 +92,7 @@ if __name__ == "__main__":
     load_dotenv(override=True)
 
     # Actualiza el token de autenticación
-    TokenGenerator().update_token()
+    # TokenGenerator().update_token()
 
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -121,8 +121,8 @@ if __name__ == "__main__":
             "cantidadFactura": len(facturas_agrupadas),
             "facturas": facturas_agrupadas,
         }
-        # result = oInvoice.add_invoice(payload)
-        # oInvoice.logger.info(f"Respuesta POST: {result}")
-        print("Payload a enviar:", payload)
+        result = oInvoice.add_invoice(payload)
+        oInvoice.logger.info(f"Respuesta POST: {result}")
+        # print("Payload a enviar:", payload)
     except Exception as e:
         oInvoice.logger.error(f"Error en POST: %s {e}", exc_info=True)
