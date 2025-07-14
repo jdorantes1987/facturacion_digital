@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     # Puedes pasar parámetros de consulta si la API los soporta, por ejemplo: {"numeroFactura": "12345"}
     params = {
-        "fechaInicio": "2025-06-20",  # Fecha de inicio del rango
+        "fechaInicio": "2025-01-01",  # Fecha de inicio del rango
         "fechaFin": hoy,  # Fecha de fin del rango
     }
     result = invoice_consultas.get_data_invoices(params=params)
