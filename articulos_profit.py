@@ -11,6 +11,13 @@ class ArticulosProfit:
     def get_articulos(self):
         return self.articulos.get_articulos()
 
+    def get_articulos_precio(self):
+        """
+        Obtiene los artículos con su precio.
+        :return: DataFrame con los artículos y sus precios.
+        """
+        return self.articulos.get_articulos_precio()
+
 
 if __name__ == "__main__":
     import os

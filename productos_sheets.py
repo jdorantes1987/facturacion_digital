@@ -32,13 +32,13 @@ class ProductosSheetManager:
         column_dev_data = ["co_art", "art_des", "art_des_coment", "precio", "tipo_imp"]
         self.clear_productos_data()
         oArticulosProfit = ArticulosProfit(conexion=conexion)
-        data = oArticulosProfit.get_articulos()[
+        art_profit = oArticulosProfit.get_articulos()[
             ["co_art", "art_des", "tipo_imp", "anulado"]
         ]
-        data = data[(~data["anulado"])]
-        data["art_des_coment"] = data["art_des"]
+        art_profit = art_profit[(~art_profit["anulado"])]
+        art_profit["art_des_coment"] = art_profit["art_des"]
         # Tipo de impuesto aplicable. Campo obligatorio. Valores permitidos: "E" (Exento), "R" (Reducido), "G" (General), "A" (Adicional), "P" (Percibido).
-        data["tipo_imp"] = data["tipo_imp"].replace(
+        art_profit["tipo_imp"] = art_profit["tipo_imp"].replace(
             {
                 "5": "E",
                 "Reducido": "R",
@@ -49,16 +49,18 @@ class ProductosSheetManager:
                 "7": "E",
             }
         )
-        if not data.empty:
-            data["precio"] = 1.0
-            data = data[column_dev_data]
-
+        if not art_profit.empty:
+            precios = oArticulosProfit.get_articulos_precio()
+            art_profit = art_profit.merge(precios, on="co_art", how="left")
+            # reemplazar los valores NaN en la columna 'precio' con 1
+            art_profit["precio"] = art_profit["precio"].fillna(1)
+            art_profit = art_profit[column_dev_data]
             # actualizar la hoja de Google Sheets con los datos de clientes desde la fila 2
             self.service.spreadsheets().values().update(
                 spreadsheetId=self.spreadsheet_id,
                 range=f"{self.sheet_name}!A2",
                 valueInputOption="RAW",
-                body={"values": data.values.tolist()},
+                body={"values": art_profit.values.tolist()},
             ).execute()
 
 
