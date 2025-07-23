@@ -35,7 +35,7 @@ class GetInvoices:
             return DataFrame()
         data = DataFrame(data_json)
 
-        # Cambia la URL del PDF de la factura para que apunte a la vista previa
+        # Cambia la URL del PDF de la factura para que apunte a la vista previa, regex=True permite usar expresiones regulares
         data["invoice_pdf"] = data["invoice_pdf"].replace(
             r"readonly/export_pdf", "readonly/invoice/preview", regex=True
         )

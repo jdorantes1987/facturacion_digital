@@ -1,9 +1,9 @@
+import json
 import logging
 import logging.config
 from collections import OrderedDict
 
-from api_gateway_client import ApiGatewayClient
-from api_key_manager import ApiKeyManager
+from data_facturacion import DataFacturacion
 
 logging.config.fileConfig("logging.ini")
 
@@ -80,13 +80,55 @@ class AddInvoice:
         # Convertir cada OrderedDict a dict antes de regresar
         return [dict(factura) for factura in facturas_dict.values()]
 
+    def facturacion_manual(self, data_a_facturar) -> bool:
+        """
+        Realizar la facturación según la fuente de datos en formato diccionario.
+        """
+        facturas_agrupadas = self.agrupar_facturas(data_a_facturar)
+        # Ejemplo de POST agregando una factura
+        try:
+            payload = {
+                "numeroSerie": "A",
+                "cantidadFactura": len(facturas_agrupadas),
+                "facturas": facturas_agrupadas,
+            }
+            result = self.add_invoice(payload)
+            # Comprobación y parseo del resultado
+            if isinstance(result, str):
+                # Si el resultado es una cadena, intentar convertirlo a un diccionario
+                result = json.loads(result)
+
+            if "invoice_list_success" in result:
+                # Recorrer la lista de facturas exitosas
+                for invoice in result["invoice_list_success"]:
+                    # Reemplaza la URL del PDF de la factura para que apunte a la vista previa
+                    invoice["invoice_pdf"] = invoice["invoice_pdf"].replace(
+                        r"readonly/export_pdf", "readonly/invoice/preview"
+                    )
+
+            # print("Payload a enviar:", payload)
+            self.logger.info(f"Respuesta POST: {result}")
+            return result
+        except json.JSONDecodeError as e:
+            self.logger.error(
+                f"Error: La cadena no es un JSON válido. {e}", exc_info=True
+            )
+            self.logger.error(
+                f"Cadena problemática: {self.add_invoice(payload)}", exc_info=True
+            )
+        except Exception as e:
+            self.logger.error(f"Error en POST: %s {e}", exc_info=True)
+            return {"success": False, "message": str(e)}
+
 
 if __name__ == "__main__":
     import os
+    from time import sleep
 
     from dotenv import load_dotenv
 
-    from data_facturacion import DataFacturacion
+    from api_gateway_client import ApiGatewayClient
+    from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
     load_dotenv(override=True)
@@ -107,22 +149,66 @@ if __name__ == "__main__":
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-    data_a_facturar = (
-        DataFacturacion(SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE)
-        .get_data_facturacion()
-        .to_dict(orient="records")
-    )
-    facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
+    # data_a_facturar = (
+    #     DataFacturacion(SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE)
+    #     .get_data_facturacion()
+    #     .to_dict(orient="records")
+    # )
+    # facturas_agrupadas = oInvoice.agrupar_facturas(data_a_facturar)
 
-    # Ejemplo de POST agregando una factura
-    try:
-        payload = {
-            "numeroSerie": "A",
-            "cantidadFactura": len(facturas_agrupadas),
-            "facturas": facturas_agrupadas,
-        }
-        result = oInvoice.add_invoice(payload)
-        oInvoice.logger.info(f"Respuesta POST: {result}")
-        # print("Payload a enviar:", payload)
-    except Exception as e:
-        oInvoice.logger.error(f"Error en POST: %s {e}", exc_info=True)
+    # # Ejemplo de POST agregando una factura
+    # try:
+    #     payload = {
+    #         "numeroSerie": "A",
+    #         "cantidadFactura": len(facturas_agrupadas),
+    #         "facturas": facturas_agrupadas,
+    #     }
+    #     result = oInvoice.add_invoice(payload)
+    #     oInvoice.logger.info(f"Respuesta POST: {result}")
+    #     # print("Payload a enviar:", payload)
+    # except Exception as e:
+    #     oInvoice.logger.error(f"Error en POST: %s {e}", exc_info=True)
+
+    # ------------------------------------------------------------------------------
+    # REALIZA LA FACTURACIÓN MANUAL
+    # _______________________________________________________________________________
+    # Hacer un loop while por el campo "numeroFactura" de data_a_facturar la idea es que reconozca cada factura de manera única y valide de la respuesta de la API sea satisfactoria
+    data_a_facturar = DataFacturacion(
+        SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE
+    ).get_data_facturacion()
+
+    i = 0
+    # Filtra los datos de la factura actual a traves de un set del campo "numeroFactura"
+    facturas = set(data_a_facturar["numeroFactura"])
+    # Ordenar las facturas para procesarlas en orden
+    facturas = sorted(facturas)
+    # Convierte el set a una lista para poder acceder a los elementos por índice
+    facturas = list(facturas)
+    # Inicializa la variable result como un diccionario con clave "success" en True
+    result = {"success": True}
+    # Procesar mientras variable result es igual a True
+    while (
+        i < len(facturas)
+        # Asegura que result tenga la clave "success" y sea True
+        and result.get("success", False) is not False
+        # Asegura que no haya errores en la factura
+        and len(result.get("invoice_errors", [])) == 0
+    ):
+        # Filtra los datos de la factura actual
+        data_factura_actual = data_a_facturar[
+            data_a_facturar["numeroFactura"] == facturas[i]
+        ]
+        # print("Datos a facturar:", data_factura_actual)
+        result = oInvoice.facturacion_manual(
+            data_factura_actual.to_dict(orient="records")
+        )
+        if result["success"] and len(result.get("invoice_errors", [])) == 0:
+            print(f"Factura {facturas[i]} guardada satisfactoriamente.")
+        else:
+            print(f"Se detuvo la facturación de {facturas[i]}: {result['message']}")
+        # Incrementa el índice para procesar la siguiente factura
+        i += 1
+        # Espera 2 segundos antes de procesar la siguiente factura
+        sleep(2)
+
+    print("Proceso de facturación finalizado.")
