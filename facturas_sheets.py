@@ -46,12 +46,13 @@ class FacturasSheetManager:
         self, data_facturas_a_validar: DataFrame, historico_tasas: DataFrame
     ):
         data = data_facturas_a_validar.copy()
-        data["fec_emis"] = data["fec_emis"].dt.normalize()  # Normalizar fechas
-        data.sort_values(by="fec_emis", inplace=True, ascending=True)
         # Asegúrate de que el DataFrame no esté vacío antes de proceder
         if data.empty:
             print("No hay datos para actualizar en la hoja de facturas.")
-            return
+            return None
+
+        data["fec_emis"] = data["fec_emis"].dt.normalize()  # Normalizar fechas
+        data.sort_values(by="fec_emis", inplace=True, ascending=True)
         data = merge_asof(
             data,
             historico_tasas,
