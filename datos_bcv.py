@@ -1,16 +1,21 @@
 import logging
+from pandas import DataFrame
 
 
 class DatosBCV:
     def __init__(self, manager_sheets):
         self.manager_sheets = manager_sheets
 
-    def get_historico_tasas(self):
+    def get_historico_tasas(self) -> DataFrame:
         self.data = self.manager_sheets.get_data_hoja(sheet_name="data")
         if self.data.empty:
             logging.error("No hay datos en la hoja 'data'.")
-            return None
-        return self.data
+            return DataFrame()  # Retorna un DataFrame vacío en lugar de None
+
+        data = self.data.copy()
+        data["fecha2"] = data["fecha"].astype("datetime64[ns]")
+        data.sort_values(by="fecha2", inplace=True, ascending=True)
+        return data
 
 
 if __name__ == "__main__":
@@ -40,5 +45,5 @@ if __name__ == "__main__":
     datos_bcv = DatosBCV(manager_sheets)
     # Obtener datos históricos de tasas
     historico_tasas = datos_bcv.get_historico_tasas()
-    if historico_tasas is not None:
+    if not historico_tasas.empty:
         print(historico_tasas)

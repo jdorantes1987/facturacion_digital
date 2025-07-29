@@ -1,6 +1,6 @@
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from pandas import DataFrame
+from pandas import DataFrame, merge_asof
 
 
 class FacturasSheetManager:
@@ -42,12 +42,23 @@ class FacturasSheetManager:
         ).execute()
         return True
 
-    def update_facturas_sheet(self, data_facturas_a_validar: DataFrame):
+    def update_facturas_sheet(
+        self, data_facturas_a_validar: DataFrame, historico_tasas: DataFrame
+    ):
         data = data_facturas_a_validar.copy()
+        data["fec_emis"] = data["fec_emis"].dt.normalize()  # Normalizar fechas
+        data.sort_values(by="fec_emis", inplace=True, ascending=True)
         # Asegúrate de que el DataFrame no esté vacío antes de proceder
         if data.empty:
             print("No hay datos para actualizar en la hoja de facturas.")
             return
+        data = merge_asof(
+            data,
+            historico_tasas,
+            left_on="fec_emis",
+            right_on="fecha2",
+            direction="nearest",
+        )  # Combinar por aproximación
         self.clear_facturas_data()
         if not data.empty:
             # Selecciona y ordena las columnas a actualizar
@@ -59,6 +70,7 @@ class FacturasSheetManager:
                 "comentario",
                 "total_art",
                 "prec_vta",
+                "venta_ask2",
             ]
             values = data[columnas].values.tolist()
 
@@ -67,32 +79,36 @@ class FacturasSheetManager:
                 "valueInputOption": "USER_ENTERED",
                 "data": [
                     {
-                        "range": f"{self.sheet_name}!B2:B{len(values)+1}",
+                        "range": f"{self.sheet_name}!B2:B{len(values) + 1}",
                         "values": [[row[0]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!C2:C{len(values)+1}",
+                        "range": f"{self.sheet_name}!C2:C{len(values) + 1}",
                         "values": [[row[1]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!H2:H{len(values)+1}",
+                        "range": f"{self.sheet_name}!H2:H{len(values) + 1}",
                         "values": [[row[2]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!J2:J{len(values)+1}",
+                        "range": f"{self.sheet_name}!J2:J{len(values) + 1}",
                         "values": [[row[3]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!L2:L{len(values)+1}",
+                        "range": f"{self.sheet_name}!L2:L{len(values) + 1}",
                         "values": [[row[4]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!M2:M{len(values)+1}",
+                        "range": f"{self.sheet_name}!M2:M{len(values) + 1}",
                         "values": [[row[5]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!U2:U{len(values)+1}",
-                        "values": [[False] for _ in values],
+                        "range": f"{self.sheet_name}!N2:N{len(values) + 1}",
+                        "values": [[row[6]] for row in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!U2:U{len(values) + 1}",
+                        "values": [[True] for _ in values],
                     },
                 ],
             }
@@ -113,6 +129,8 @@ if __name__ == "__main__":
 
     from api_gateway_client import ApiGatewayClient
     from api_key_manager import ApiKeyManager
+    from data_sheets import ManagerSheets
+    from datos_bcv import DatosBCV
     from sincroniza_facturacion import SincronizaFacturacion
     from token_generator import TokenGenerator
 
@@ -150,6 +168,15 @@ if __name__ == "__main__":
     api_key_manager = ApiKeyManager()
     client = ApiGatewayClient(api_url, api_key_manager)
 
+    SHEET_NAME = os.getenv("FILE_HISTORICO_TASAS_BCV_NAME")
+    SPREADSHEET_ID = os.getenv("HISTORICO_TASAS_BCV_ID")
+    CREDENTIALS_FILE = os.getenv("HISTORICO_TASAS_BCV_CREDENTIALS")
+
+    # Inicializar el administrador de hojas de cálculo
+    manager_sheets = ManagerSheets(SHEET_NAME, SPREADSHEET_ID, CREDENTIALS_FILE)
+    # Crear instancia de DatosBCV
+    datos_bcv = DatosBCV(manager_sheets)
+
     try:
         db = DatabaseConnector(sqlserver_connector)
         oFacturasManager.clear_facturas_data()
@@ -162,9 +189,14 @@ if __name__ == "__main__":
             "fechaFin": hoy,  # Fecha de fin del rango
         }
 
+        # Obtener datos históricos de tasas
+        historico_tasas = datos_bcv.get_historico_tasas()[["fecha2", "venta_ask2"]]
+
         data = oSincronizaFacturacion.data_a_validar_en_sheet(params=params)
         if (
-            oFacturasManager.update_facturas_sheet(data_facturas_a_validar=data)
+            oFacturasManager.update_facturas_sheet(
+                data_facturas_a_validar=data, historico_tasas=historico_tasas
+            )
             is not None
         ):
             print("Hoja de facturas actualizada correctamente.")
