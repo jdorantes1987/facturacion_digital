@@ -25,6 +25,7 @@ class FacturasSheetManager:
             f"{self.sheet_name}!H2:H1000",  # Codigo Producto
             f"{self.sheet_name}!J2:J1000",  # Comentario
             f"{self.sheet_name}!M2:M1000",  # Monto
+            f"{self.sheet_name}!N2:N1000",  # Tasa BCV
             f"{self.sheet_name}!L2:L1000",  # Total Articulo
         ]
         # Usa batchClear para limpiar todos los rangos en una sola llamada
@@ -43,6 +44,10 @@ class FacturasSheetManager:
 
     def update_facturas_sheet(self, data_facturas_a_validar: DataFrame):
         data = data_facturas_a_validar.copy()
+        # Asegúrate de que el DataFrame no esté vacío antes de proceder
+        if data.empty:
+            print("No hay datos para actualizar en la hoja de facturas.")
+            return
         self.clear_facturas_data()
         if not data.empty:
             # Selecciona y ordena las columnas a actualizar
@@ -91,9 +96,12 @@ class FacturasSheetManager:
                     },
                 ],
             }
-            self.service.spreadsheets().values().batchUpdate(
-                spreadsheetId=self.spreadsheet_id, body=body
-            ).execute()
+            return (
+                self.service.spreadsheets()
+                .values()
+                .batchUpdate(spreadsheetId=self.spreadsheet_id, body=body)
+                .execute()
+            )
 
 
 if __name__ == "__main__":
@@ -112,7 +120,12 @@ if __name__ == "__main__":
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
-    load_dotenv(override=True)
+    env_path = os.path.join("..\\profit", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el archivo
+
     TokenGenerator().update_token()
     # Para SQL Server
     sqlserver_connector = SQLServerConnector(
@@ -125,7 +138,7 @@ if __name__ == "__main__":
     # Usa variables de entorno o reemplaza por tus valores
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_FACTURACION_NAME", "facturacion")
-    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    CREDENTIALS_FILE = os.getenv("CGIMPRENTA_CREDENTIALS")
 
     # Inicializar el administrador de hojas de cálculo
     oFacturasManager = FacturasSheetManager(
@@ -150,7 +163,10 @@ if __name__ == "__main__":
         }
 
         data = oSincronizaFacturacion.data_a_validar_en_sheet(params=params)
-        oFacturasManager.update_facturas_sheet(data_facturas_a_validar=data)
-        print("Hoja de facturas actualizada correctamente.")
+        if (
+            oFacturasManager.update_facturas_sheet(data_facturas_a_validar=data)
+            is not None
+        ):
+            print("Hoja de facturas actualizada correctamente.")
     except Exception as e:
         print(f"Error al actualizar la hoja de facturas: {e}")

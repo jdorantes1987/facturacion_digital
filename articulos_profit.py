@@ -21,13 +21,19 @@ class ArticulosProfit:
 
 if __name__ == "__main__":
     import os
-
-    from dotenv import load_dotenv
+    import sys
 
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
+    from dotenv import load_dotenv
 
-    load_dotenv(override=True)
+    sys.path.append("..\\profit")
+
+    env_path = os.path.join("..\\profit", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el archivo
 
     # Para SQL Server
     sqlserver_connector = SQLServerConnector(

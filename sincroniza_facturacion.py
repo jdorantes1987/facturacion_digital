@@ -93,7 +93,14 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
-    load_dotenv(override=True)
+    sys.path.append("..\\profit")
+
+    env_path = os.path.join("..\\profit", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el archivo
+
     TokenGenerator().update_token()
 
     # Para SQL Server

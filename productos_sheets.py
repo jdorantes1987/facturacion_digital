@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # Usa variables de entorno o reemplaza por tus valores
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_PRODUCTOS_NAME", "productos")
-    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    CREDENTIALS_FILE = os.getenv("CGIMPRENTA_CREDENTIALS")
 
     oArticulosManager = ProductosSheetManager(
         SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE

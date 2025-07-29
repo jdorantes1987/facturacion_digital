@@ -48,12 +48,20 @@ class ClientesSheetManager:
 
 if __name__ == "__main__":
     import os
+    import sys
 
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
     from dotenv import load_dotenv
 
-    load_dotenv(override=True)
+    sys.path.append("..\\profit")
+
+    env_path = os.path.join("..\\profit", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el archivo
+
     # Para SQL Server
     sqlserver_connector = SQLServerConnector(
         host=os.getenv("HOST_PRODUCCION_PROFIT"),
@@ -65,7 +73,7 @@ if __name__ == "__main__":
     # Usa variables de entorno o reemplaza por tus valores
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_CLIENTES_NAME", "clientes")
-    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    CREDENTIALS_FILE = os.getenv("CGIMPRENTA_CREDENTIALS")
 
     oClientesManager = ClientesSheetManager(
         SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE

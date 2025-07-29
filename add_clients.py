@@ -29,6 +29,7 @@ class AddClients:
 
 if __name__ == "__main__":
     import os
+    import sys
 
     from dotenv import load_dotenv
 
@@ -36,11 +37,17 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from data_facturacion import DataFacturacion
 
-    load_dotenv(override=True)
+    sys.path.append("..\\profit")
+
+    env_path = os.path.join("..\\profit", ".env")
+    load_dotenv(
+        dotenv_path=env_path,
+        override=True,
+    )  # Recarga las variables de entorno desde el archivo
 
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
-    CREDENTIALS_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    CREDENTIALS_FILE = os.getenv("CGIMPRENTA_CREDENTIALS")
 
     oDataFacturacion = DataFacturacion(
         SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE
