@@ -191,7 +191,9 @@ if __name__ == "__main__":
         }
 
         # Obtener datos históricos de tasas
-        historico_tasas = datos_bcv.get_historico_tasas()[["fecha2", "venta_ask2"]]
+        historico_tasas = datos_bcv.get_historico_tasas_google_sh()[
+            ["fecha2", "venta_ask2"]
+        ]
 
         data = oSincronizaFacturacion.data_a_validar_en_sheet(params=params)
         if (
