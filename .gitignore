@@ -11,6 +11,8 @@ cg_imprenta
 # C extensions
 *.so
 
+credentials.json
+
 # Distribution / packaging
 .Python
 build/
