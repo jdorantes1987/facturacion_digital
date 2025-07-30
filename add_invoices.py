@@ -141,7 +141,7 @@ if __name__ == "__main__":
     )  # Recarga las variables de entorno desde el archivo
 
     # Actualiza el token de autenticación
-    # TokenGenerator().update_token()
+    TokenGenerator().update_token()
 
     logging.basicConfig(
         level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
