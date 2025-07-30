@@ -12,6 +12,7 @@ cg_imprenta
 *.so
 
 credentials.json
+token.json
 
 # Distribution / packaging
 .Python
