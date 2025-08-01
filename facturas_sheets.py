@@ -46,18 +46,19 @@ class FacturasSheetManager:
         self, data_facturas_a_validar: DataFrame, historico_tasas: DataFrame
     ):
         data = data_facturas_a_validar.copy()
+        historico_tasas.sort_values(by="fecha", inplace=True, ascending=True)
         # Asegúrate de que el DataFrame no esté vacío antes de proceder
         if data.empty:
             print("No hay datos para actualizar en la hoja de facturas.")
             return None
 
-        data["fec_emis"] = data["fec_emis"].dt.normalize()  # Normalizar fechas
         data.sort_values(by="fec_emis", inplace=True, ascending=True)
+        data["fec_emis"] = data["fec_emis"].dt.normalize()  # Normalizar fechas
         data = merge_asof(
             data,
             historico_tasas,
             left_on="fec_emis",
-            right_on="fecha2",
+            right_on="fecha",
             direction="nearest",
         )  # Combinar por aproximación
         self.clear_facturas_data()
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 
         # Obtener datos históricos de tasas
         historico_tasas = datos_bcv.get_historico_tasas_google_sh()[
-            ["fecha2", "venta_ask2"]
+            ["fecha", "venta_ask2"]
         ]
 
         data = oSincronizaFacturacion.data_a_validar_en_sheet(params=params)
