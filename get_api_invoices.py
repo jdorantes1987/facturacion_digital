@@ -62,8 +62,6 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
-    # Actualiza el token de autenticación
-    TokenGenerator().update_token()
     sys.path.append("..\\profit")
 
     env_path = os.path.join("..\\profit", ".env")
@@ -71,6 +69,9 @@ if __name__ == "__main__":
         dotenv_path=env_path,
         override=True,
     )  # Recarga las variables de entorno desde el archivo
+
+    # Actualiza el token de autenticación
+    TokenGenerator().update_token()
 
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
     api_key_manager = ApiKeyManager()
