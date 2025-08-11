@@ -140,12 +140,12 @@ class DataFacturacion:
             data["descripcionProducto"] = (
                 data["nombreProducto"] + " - " + data["descripcionProducto"]
             )
-            cols_montos = [
-                "precioProducto",
-            ]  # Lista de columnas que contienen montos
-            # Reemplazar punto decimal por coma
-            for col in cols_montos:
-                data[col] = data[col].astype(str).str.replace(".", ",", regex=False)
+            # cols_montos = [
+            #     "precioProducto",
+            # ]  # Lista de columnas que contienen montos
+            # # Reemplazar punto decimal por coma
+            # for col in cols_montos:
+            #     data[col] = data[col].astype(str).str.replace(".", ",", regex=False)
 
         return data
 
