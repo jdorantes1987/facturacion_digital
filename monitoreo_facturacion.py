@@ -32,6 +32,7 @@ class MonitoreoFacturacion:
 
             if cambios:
                 self.logger.info(f"Se detectaron {len(cambios)} cambios:")
+                time.sleep(30)
                 for fila in cambios:
                     self.logger.info(
                         fila[0] + " " + fila[2] + " " + fila[51] + " " + str(fila[53])
