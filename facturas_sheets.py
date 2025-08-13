@@ -24,9 +24,10 @@ class FacturasSheetManager:
             f"{self.sheet_name}!C2:C1000",  # Rif
             f"{self.sheet_name}!H2:H1000",  # Codigo Producto
             f"{self.sheet_name}!J2:J1000",  # Comentario
-            f"{self.sheet_name}!M2:M1000",  # Monto
-            f"{self.sheet_name}!N2:N1000",  # Tasa BCV
-            f"{self.sheet_name}!L2:L1000",  # Total Articulo
+            f"{self.sheet_name}!K2:K1000",  # Descripción Factura
+            f"{self.sheet_name}!M2:M1000",  # Total Articulo
+            f"{self.sheet_name}!N2:N1000",  # Monto
+            f"{self.sheet_name}!O2:O1000",  # Tasa BCV
         ]
         # Usa batchClear para limpiar todos los rangos en una sola llamada
         self.service.spreadsheets().values().batchClear(
@@ -36,7 +37,7 @@ class FacturasSheetManager:
         values = [[False] for _ in range(999)]
         self.service.spreadsheets().values().update(
             spreadsheetId=self.spreadsheet_id,
-            range=f"{self.sheet_name}!U2:U1000",
+            range=f"{self.sheet_name}!V2:V1000",
             valueInputOption="USER_ENTERED",
             body={"values": values},
         ).execute()
@@ -71,6 +72,7 @@ class FacturasSheetManager:
                 "rif",
                 "co_art",
                 "comentario",
+                "descrip",
                 "total_art",
                 "prec_vta",
                 "venta_ask2",
@@ -98,7 +100,7 @@ class FacturasSheetManager:
                         "values": [[row[3]] for row in values],
                     },
                     {
-                        "range": f"{self.sheet_name}!L2:L{len(values) + 1}",
+                        "range": f"{self.sheet_name}!K2:K{len(values) + 1}",
                         "values": [[row[4]] for row in values],
                     },
                     {
@@ -110,7 +112,35 @@ class FacturasSheetManager:
                         "values": [[row[6]] for row in values],
                     },
                     {
+                        "range": f"{self.sheet_name}!O2:O{len(values) + 1}",
+                        "values": [[row[7]] for row in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!P2:P{len(values) + 1}",
+                        "values": [[""] for row in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!Q2:Q{len(values) + 1}",
+                        "values": [[0.0] for _ in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!R2:R{len(values) + 1}",
+                        "values": [[0.0] for _ in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!S2:S{len(values) + 1}",
+                        "values": [[""] for row in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!T2:T{len(values) + 1}",
+                        "values": [[""] for row in values],
+                    },
+                    {
                         "range": f"{self.sheet_name}!U2:U{len(values) + 1}",
+                        "values": [[""] for row in values],
+                    },
+                    {
+                        "range": f"{self.sheet_name}!V2:V{len(values) + 1}",
                         "values": [[True] for _ in values],
                     },
                 ],
