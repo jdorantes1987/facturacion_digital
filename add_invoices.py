@@ -54,6 +54,7 @@ class AddInvoice:
                 factura["correoCliente"] = item.get("correoCliente", "")
                 factura["direccionCliente"] = item.get("direccionCliente", "")
                 factura["telefonoCliente"] = item.get("telefonoCliente", "")
+                factura["descripcionFactura"] = item.get("descripcionFactura", "")
                 factura["productos"] = [producto]
                 factura["tasa_del_dia"] = item.get("tasa_del_dia", "")
                 factura["order_payment_methods"] = [
