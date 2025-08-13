@@ -12,6 +12,7 @@ required_fields = {
     "correoCliente": str,
     "direccionCliente": str,
     "telefonoCliente": str,
+    "descripcionFactura": str,
     "codigoProducto": str,
     "nombreProducto": str,
     "descripcionProducto": str,
