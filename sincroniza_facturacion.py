@@ -48,6 +48,7 @@ class SincronizaFacturacion:
             "total_art",
             "prec_vta",
             "comentario",
+            "descrip",
         ]
         # Conjuntos de facturas de Profit e Imprenta
         set_profit = self.__set_facturas_profit(params=params)
