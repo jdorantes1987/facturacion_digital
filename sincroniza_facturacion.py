@@ -60,7 +60,7 @@ class SincronizaFacturacion:
         # Obtener las diferencias entre Profit e Imprenta
         diferencias = set_profit.difference(set_imprenta)
         # Si no hay diferencias, retornar un DataFrame vacío
-        if not diferencias:
+        if not diferencias or len(set_imprenta) == 0:
             return DataFrame()
 
         # Obtener los clientes de Profit
