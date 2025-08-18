@@ -47,6 +47,7 @@ class GetInvoices:
         """
         data = self.get_data_invoices(params=params)
         if not data.empty:
+            data = data[data["document"] == "FACTURA"]  # Filtra por tipo de documento
             return data["invoice_number"].max()
         return None
 
