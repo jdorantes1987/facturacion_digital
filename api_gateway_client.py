@@ -11,6 +11,7 @@ class ApiGatewayClient:
         return {"Authorization": self.api_key, "Content-Type": "application/json"}
 
     def get_data(self, params=None):
+        self.api_key = self.api_key_manager.load()
         headers = self.get_headers()
         response = requests.get(self.url, headers=headers, params=params)
         response.raise_for_status()
