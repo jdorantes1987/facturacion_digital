@@ -2,7 +2,7 @@ import json
 import logging
 import logging.config
 from collections import OrderedDict
-
+from pandas import to_numeric
 from data_facturacion import DataFacturacion
 
 logging.config.fileConfig("logging.ini")
@@ -93,7 +93,7 @@ class AddInvoice:
                 "cantidadFactura": len(facturas_agrupadas),
                 "facturas": facturas_agrupadas,
             }
-            result = self.add_invoice(payload)
+            result = ""  # self.add_invoice(payload)
             # Comprobación y parseo del resultado
             if isinstance(result, str):
                 # Si el resultado es una cadena, intentar convertirlo a un diccionario
@@ -121,6 +121,23 @@ class AddInvoice:
             self.logger.error(f"Error en POST: %s {e}", exc_info=True)
             return {"success": False, "message": str(e)}
 
+    def es_correlativo_diff(serie):
+        """
+        Verifica si una serie es correlativa usando diferencias.
+        """
+        # Convertir a numérico
+        serie_numerica = to_numeric(serie, errors="coerce")
+
+        # Ordenar la serie
+        serie_numerica = serie_numerica.sort_values()
+
+        # Calcular la diferencia entre elementos consecutivos
+        diferencias = serie_numerica.diff()
+
+        # Los valores de diferencia deben ser 1, excepto el primero que es NaN
+        # Verificar si todos los valores (excepto el primero) son 1
+        return (diferencias.iloc[1:] == 1).all()
+
 
 if __name__ == "__main__":
     import os
@@ -128,10 +145,12 @@ if __name__ == "__main__":
     from time import sleep
 
     from dotenv import load_dotenv
+    from pandas import Series
 
     from api_gateway_client import ApiGatewayClient
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
+    from get_api_invoices import GetInvoices
 
     sys.path.append("..\\profit")
 
@@ -184,6 +203,32 @@ if __name__ == "__main__":
     data_a_facturar = DataFacturacion(
         SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE
     ).get_data_facturacion()
+
+    last_invoice = GetInvoices(
+        ApiGatewayClient(
+            os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES"), ApiKeyManager()
+        )
+    ).get_last_invoice()
+
+    # Extrae la columna "numeroFactura" y la convierte en una lista
+    numeros_factura = data_a_facturar["numeroFactura"].to_list()
+
+    # Agrega el último número de factura obtenido de la API al inicio de la lista de números de factura
+    numeros_factura.append(last_invoice)
+
+    # Convierte la lista a una Serie de pandas
+    numeros_factura = Series(numeros_factura)
+
+    # Verifica si los números de factura son correlativos
+    es_correlativo = AddInvoice.es_correlativo_diff(numeros_factura)
+
+    # Si no son correlativos, imprime un mensaje y termina el programa
+    if not es_correlativo:
+        print(
+            f"Los números de factura {sorted(numeros_factura.to_list())} no son correlativos, por favor revisar la data a enviar."
+        )
+        # Termina la ejecución del programa con un código de salida 1 (error)
+        exit(1)
 
     i = 0
     # Filtra los datos de la factura actual a traves de un set del campo "numeroFactura"
