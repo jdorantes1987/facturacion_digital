@@ -52,7 +52,8 @@ class MonitoreoFacturacion:
                     self.logger.info(
                         fila[0] + " " + fila[2] + " " + fila[51] + " " + str(fila[53])
                     )
-
+                # Actualiza la fecha de fin a hoy
+                params["fechaFin"] = date.today().strftime("%Y-%m-%d")
                 procesado = self.verificar_y_procesar_cambios(params=params)
                 if procesado:
                     self.logger.info("Cambios enviados a Google Sheets.")
