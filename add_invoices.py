@@ -93,7 +93,7 @@ class AddInvoice:
                 "cantidadFactura": len(facturas_agrupadas),
                 "facturas": facturas_agrupadas,
             }
-            result = ""  # self.add_invoice(payload)
+            result = self.add_invoice(payload)
             # Comprobación y parseo del resultado
             if isinstance(result, str):
                 # Si el resultado es una cadena, intentar convertirlo a un diccionario
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     ).get_last_invoice()
 
     # Extrae la columna "numeroFactura" y la convierte en una lista
-    numeros_factura = data_a_facturar["numeroFactura"].to_list()
+    numeros_factura = data_a_facturar["numeroFactura"].unique().tolist()
 
     # Agrega el último número de factura obtenido de la API al inicio de la lista de números de factura
     numeros_factura.append(last_invoice)
