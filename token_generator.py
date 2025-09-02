@@ -14,7 +14,7 @@ class TokenGenerator:
     def update_token(self) -> dict:
         payload = {
             "userName": os.getenv("USER_API"),
-            "userPassword": os.getenv("PW_API"),
+            "userPassword": os.getenv("API_TOKEN"),
         }
         try:
             result = self.client_api_gateway.post_data(payload)
