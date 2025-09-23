@@ -29,6 +29,12 @@ class FacturasSheetManager:
             f"{self.sheet_name}!N2:N1000",  # Monto
             f"{self.sheet_name}!O2:O1000",  # Tasa BCV
         ]
+        try:
+            # Verifica si la hoja existe
+            self.service.spreadsheets().get(spreadsheetId=self.spreadsheet_id).execute()
+        except Exception as e:
+            print(f"Error al verificar la hoja: {e}")
+            return False
         # Usa batchClear para limpiar todos los rangos en una sola llamada
         self.service.spreadsheets().values().batchClear(
             spreadsheetId=self.spreadsheet_id, body={"ranges": ranges_to_clear}
