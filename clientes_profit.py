@@ -21,8 +21,6 @@ if __name__ == "__main__":
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
-    sys.path.append("..\\profit")
-
     env_path = os.path.join("..\\profit", ".env")
     load_dotenv(
         dotenv_path=env_path,
