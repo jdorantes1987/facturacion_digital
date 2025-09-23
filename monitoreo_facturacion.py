@@ -107,7 +107,7 @@ if __name__ == "__main__":
         user=os.environ["DB_USER_PROFIT"],
         password=os.environ["DB_PASSWORD_PROFIT"],
     )
-
+    sqlserver_connector.connect()
     db = DatabaseConnector(sqlserver_connector)
     oTokenGenerator = TokenGenerator()
     # Inicializar el cliente de la API
@@ -150,3 +150,4 @@ if __name__ == "__main__":
         "fechaFin": hoy,  # Fecha de fin del rango
     }
     oMonitoreoFacturacion.monitorear_cambios(params=params)
+    sqlserver_connector.close_connection()

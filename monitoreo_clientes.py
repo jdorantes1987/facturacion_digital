@@ -77,7 +77,7 @@ if __name__ == "__main__":
         user=os.environ["DB_USER_PROFIT"],
         password=os.environ["DB_PASSWORD_PROFIT"],
     )
-
+    sqlserver_connector.connect()
     # Para Google Sheets
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
     SHEET_NAME = os.getenv("GOOGLE_SHEET_CLIENTES_NAME", "clientes")
@@ -88,3 +88,4 @@ if __name__ == "__main__":
     db = DatabaseConnector(sqlserver_connector)
     oMonitoreoClientes = MonitoreoClientes(db, clientes_sheet_manager)
     oMonitoreoClientes.monitorear_cambios()
+    sqlserver_connector.close_connection()
