@@ -37,9 +37,9 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from data_facturacion import DataFacturacion
 
-    sys.path.append("..\\profit")
+    sys.path.append("..\\conexiones")
 
-    env_path = os.path.join("..\\profit", ".env")
+    env_path = os.path.join("..\\conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,

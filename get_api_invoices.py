@@ -63,9 +63,9 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
-    sys.path.append("..\\profit")
+    sys.path.append("..\\conexiones")
 
-    env_path = os.path.join("..\\profit", ".env")
+    env_path = os.path.join("..\\conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,

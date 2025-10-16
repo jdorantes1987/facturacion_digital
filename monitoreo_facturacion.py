@@ -90,11 +90,11 @@ if __name__ == "__main__":
     from token_generator import TokenGenerator
     from facturas_sheets import FacturasSheetManager
 
-    sys.path.append("..\\profit")
+    sys.path.append("..\\conexiones")
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
-    env_path = os.path.join("..\\profit", ".env")
+    env_path = os.path.join("..\\conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,
