@@ -6,7 +6,7 @@ logging.config.fileConfig("logging.ini")
 
 
 class MonitoreoClientes:
-    def __init__(self, conexion, clientes_sheet_manager=None):
+    def __init__(self, conexion, clientes_sheet_manager):
         self.db = conexion
         self.logger = logging.getLogger(__class__.__name__)
         self.oClientesManager = clientes_sheet_manager
@@ -60,11 +60,11 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     from clientes_sheets import ClientesSheetManager
 
-    sys.path.append("..\\conexiones")
+    sys.path.append("../conexiones")
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
-    env_path = os.path.join("..\\conexiones", ".env")
+    env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,
