@@ -49,7 +49,7 @@ class GetInvoices:
         if not data.empty:
             data = data[data["document"] == "FACTURA"]  # Filtra por tipo de documento
             return data["invoice_number"].max()
-        return None
+        return ""
 
 
 if __name__ == "__main__":
@@ -63,9 +63,9 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
-    sys.path.append("..\\conexiones")
+    sys.path.append("../conexiones")
 
-    env_path = os.path.join("..\\conexiones", ".env")
+    env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,

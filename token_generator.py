@@ -32,9 +32,9 @@ if __name__ == "__main__":
     import sys
     from dotenv import load_dotenv
 
-    sys.path.append("..\\conexiones")
+    sys.path.append("../conexiones")
 
-    env_path = os.path.join("..\\conexiones", ".env")
+    env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,

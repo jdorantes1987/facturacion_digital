@@ -5,7 +5,7 @@ from pandas import DataFrame
 
 from get_api_invoices import GetInvoices
 
-sys.path.append("..\\profit")
+sys.path.append("../profit")
 from data.mod.ventas import documentos
 from data.mod.ventas.clientes import Clientes
 from data.mod.ventas.facturas_ventas import FacturasVentas
@@ -18,7 +18,7 @@ class SincronizaFacturacion:
         self.oClientes = Clientes(conexion)
         self.client = api_gateway_client
 
-    def __set_facturas_profit(self, params=None):
+    def __set_facturas_profit(self, params={}):
         documentos = self.oDocumentos.get_documentos(tipo_doc="FACT")
         # fecha sin hora, minutos y segundos
         documentos["fec_emis"] = documentos["fec_emis"].dt.normalize()
@@ -38,7 +38,7 @@ class SincronizaFacturacion:
         # ]
         return set(facturas_imprenta["invoice_number"].str.strip())
 
-    def data_a_validar_en_sheet(self, params=None) -> DataFrame:
+    def data_a_validar_en_sheet(self, params={}) -> DataFrame:
         # Campos a validar en Sheet
         campos_a_validar = [
             "doc_num_encab",
@@ -92,12 +92,12 @@ if __name__ == "__main__":
     from api_key_manager import ApiKeyManager
     from token_generator import TokenGenerator
 
-    sys.path.append("..\\conexiones")
+    sys.path.append("../conexiones")
 
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
 
-    env_path = os.path.join("..\\conexiones", ".env")
+    env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,
