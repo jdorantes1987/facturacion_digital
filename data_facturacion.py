@@ -61,13 +61,24 @@ class DataFacturacion:
             return False
         return self.__validar_campos_requeridos(self.data.columns.to_list())
 
-    def __tipos_datos_validados_data_a_facturar(self, data: dict) -> list[dict]:
+    def __tipos_datos_validados_data_a_facturar(self, data: dict) -> bool:
+        """
+        Verifica que cada campo requerido exista y tenga el tipo esperado.
+        Retorna True si todos los campos son válidos, False en caso contrario.
+        """
         is_valid_data = True
         for field, field_type in required_fields.items():
-            if not isinstance(data[field], field_type):
+            if field not in data:
+                logging.error(
+                    f"Campo requerido '{field}' no encontrado en el registro."
+                )
+                is_valid_data = False
+                continue
+            value = data[field]
+            if not isinstance(value, field_type):
                 logging.error(
                     f"Tipo de dato incorrecto para el campo '{field}': "
-                    f"esperado {field_type}, recibido {type(data[field])}."
+                    f"esperado {field_type}, recibido {type(value)}."
                 )
                 is_valid_data = False
         return is_valid_data
@@ -183,18 +194,18 @@ if __name__ == "__main__":
     import os
     import sys
 
-    from dotenv import load_dotenv
+    # from dotenv import load_dotenv
 
     sys.path.append("../conexiones")
 
-    from conn.database_connector import DatabaseConnector  # noqa: E402
-    from conn.sql_server_connector import SQLServerConnector  # noqa: E402
+    # from conn.database_connector import DatabaseConnector  # noqa: E402
+    # from conn.sql_server_connector import SQLServerConnector  # noqa: E402
 
-    env_path = os.path.join("../conexiones", ".env")
-    load_dotenv(
-        dotenv_path=env_path,
-        override=True,
-    )  # Recarga las variables de entorno desde el archivo
+    # env_path = os.path.join("../conexiones", ".env")
+    # load_dotenv(
+    #     dotenv_path=env_path,
+    #     override=True,
+    # )  # Recarga las variables de entorno desde el archivo
 
     FILE_FACTURACION_NAME = os.getenv("GOOGLE_SHEET_FILE_FACTURACION_NAME")
     SPREADSHEET_ID = os.getenv("GOOGLE_SHEET_FACTURACION_ID")
