@@ -1,7 +1,7 @@
 import sys
 
 sys.path.append("../profit")
-from data.mod.inventario.articulos import Articulos
+from data.mod.inventario.articulos import Articulos  # noqa: E402
 
 
 class ArticulosProfit:

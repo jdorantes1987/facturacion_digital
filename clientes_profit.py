@@ -2,7 +2,7 @@ import sys
 from pandas import DataFrame
 
 sys.path.append("../profit")
-from data.mod.ventas.clientes import Clientes
+from data.mod.ventas.clientes import Clientes  # noqa: E402
 
 
 class ClientesProfit:
