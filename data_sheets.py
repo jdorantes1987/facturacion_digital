@@ -1,5 +1,5 @@
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from pandas import DataFrame
 
 
@@ -11,24 +11,26 @@ class ManagerSheets:
         self.spreadsheet = self._get_spreadsheet()
 
     def _get_spreadsheet(self):
-        # Autenticación y acceso a Google Sheets
-        self.scope = [
-            "https://spreadsheets.google.com/feeds",
+        # Autenticación y acceso a Google Sheets usando google-auth
+        scopes = [
+            "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive",
         ]
-        # Cambia aquí: usa from_json_keyfile_dict si credentials_file es un dict
+
+        # Crea credenciales dependiendo del tipo de credentials_file
         if isinstance(self.credentials_file, dict):
-            self.creds = ServiceAccountCredentials.from_json_keyfile_dict(
-                self.credentials_file, self.scope
+            creds = ServiceAccountCredentials.from_service_account_info(
+                self.credentials_file, scopes=scopes
             )
         else:
-            self.creds = ServiceAccountCredentials.from_json_keyfile_name(
-                self.credentials_file, self.scope
+            creds = ServiceAccountCredentials.from_service_account_file(
+                self.credentials_file, scopes=scopes
             )
-        client = gspread.authorize(self.creds)
+
+        client = gspread.authorize(creds)
         return client.open(self.file_sheet_name)
 
-    def get_data_hoja(self, sheet_name=None) -> DataFrame:
+    def get_data_hoja(self, sheet_name) -> DataFrame:
         # Selecciona la hoja de Google Sheets
         worksheet = self.spreadsheet.worksheet(sheet_name)
         # Obtiene todos los valores de la hoja de cálculo

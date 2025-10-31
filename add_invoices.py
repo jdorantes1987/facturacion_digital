@@ -81,35 +81,33 @@ class AddInvoice:
         # Convertir cada OrderedDict a dict antes de regresar
         return [dict(factura) for factura in facturas_dict.values()]
 
-    def facturacion_manual(self, data_a_facturar) -> bool:
+    def facturacion_manual(self, data_a_facturar) -> dict:
         """
         Realizar la facturación según la fuente de datos en formato diccionario.
         """
         facturas_agrupadas = self.agrupar_facturas(data_a_facturar)
-        # Ejemplo de POST agregando una factura
+        payload = {
+            "numeroSerie": "A",
+            "cantidadFactura": len(facturas_agrupadas),
+            "facturas": facturas_agrupadas,
+        }
         try:
-            payload = {
-                "numeroSerie": "A",
-                "cantidadFactura": len(facturas_agrupadas),
-                "facturas": facturas_agrupadas,
-            }
             result = self.add_invoice(payload)
-            # Comprobación y parseo del resultado
             if isinstance(result, str):
-                # Si el resultado es una cadena, intentar convertirlo a un diccionario
                 result = json.loads(result)
-
             if "invoice_list_success" in result:
-                # Recorrer la lista de facturas exitosas
                 for invoice in result["invoice_list_success"]:
-                    # Reemplaza la URL del PDF de la factura para que apunte a la vista previa
                     invoice["invoice_pdf"] = invoice["invoice_pdf"].replace(
                         r"readonly/export_pdf", "readonly/invoice/preview"
                     )
-
-            # print("Payload a enviar:", payload)
             self.logger.info(f"Respuesta POST: {result}")
-            return result
+            # Asegura que el resultado tenga las claves esperadas
+            return {
+                "success": result.get("success", False),
+                "invoice_errors": result.get("invoice_errors", []),
+                "message": result.get("message", ""),
+                **result,
+            }
         except json.JSONDecodeError as e:
             self.logger.error(
                 f"Error: La cadena no es un JSON válido. {e}", exc_info=True
@@ -117,11 +115,16 @@ class AddInvoice:
             self.logger.error(
                 f"Cadena problemática: {self.add_invoice(payload)}", exc_info=True
             )
+            return {
+                "success": False,
+                "invoice_errors": ["JSONDecodeError"],
+                "message": str(e),
+            }
         except Exception as e:
             self.logger.error(f"Error en POST: %s {e}", exc_info=True)
-            return {"success": False, "message": str(e)}
+            return {"success": False, "invoice_errors": [str(e)], "message": str(e)}
 
-    def es_correlativo_diff(serie):
+    def es_correlativo_diff(self, serie):
         """
         Verifica si una serie es correlativa usando diferencias.
         """
@@ -152,9 +155,9 @@ if __name__ == "__main__":
     from token_generator import TokenGenerator
     from get_api_invoices import GetInvoices
 
-    sys.path.append("..\\conexiones")
+    sys.path.append("../conexiones")
 
-    env_path = os.path.join("..\\conexiones", ".env")
+    env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
         dotenv_path=env_path,
         override=True,
@@ -199,7 +202,10 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------------------
     # REALIZA LA FACTURACIÓN MANUAL
     # _______________________________________________________________________________
-    # Hacer un loop while por el campo "numeroFactura" de data_a_facturar la idea es que reconozca cada factura de manera única y valide de la respuesta de la API sea satisfactoria
+    # Hacer un loop while por el campo "numeroFactura" de data_a_facturar la idea es
+    # que reconozca cada factura de manera única y valide de la respuesta de la API
+    # sea satisfactoria
+
     data_a_facturar = DataFacturacion(
         SPREADSHEET_ID, FILE_FACTURACION_NAME, CREDENTIALS_FILE
     ).get_data_facturacion()
@@ -211,16 +217,17 @@ if __name__ == "__main__":
     ).get_last_invoice()
 
     # Extrae la columna "numeroFactura" y la convierte en una lista
-    numeros_factura = data_a_facturar["numeroFactura"].unique().tolist()
+    numeros_factura = list(data_a_facturar["numeroFactura"].unique())
 
     # Agrega el último número de factura obtenido de la API al inicio de la lista de números de factura
-    numeros_factura.append(last_invoice)
+    if not last_invoice != "":
+        numeros_factura.append(last_invoice)
 
     # Convierte la lista a una Serie de pandas
     numeros_factura = Series(numeros_factura)
 
     # Verifica si los números de factura son correlativos
-    es_correlativo = AddInvoice.es_correlativo_diff(numeros_factura)
+    es_correlativo = oInvoice.es_correlativo_diff(numeros_factura)
 
     # Si no son correlativos, imprime un mensaje y termina el programa
     if not es_correlativo:
@@ -238,11 +245,12 @@ if __name__ == "__main__":
     # Convierte el set a una lista para poder acceder a los elementos por índice
     facturas = list(facturas)
     # Inicializa la variable result como un diccionario con clave "success" en True
-    result = {"success": True}
-    # Procesar mientras variable result es igual a True
+    result = {"success": True, "invoice_errors": [], "message": ""}
+
     while (
         i < len(facturas)
         # Asegura que result tenga la clave "success" y sea True
+        and isinstance(result, dict)
         and result.get("success", False) is not False
         # Asegura que no haya errores en la factura
         and len(result.get("invoice_errors", [])) == 0
@@ -251,17 +259,24 @@ if __name__ == "__main__":
         data_factura_actual = data_a_facturar[
             data_a_facturar["numeroFactura"] == facturas[i]
         ]
-        # print("Datos a facturar:", data_factura_actual)
         result = oInvoice.facturacion_manual(
             data_factura_actual.to_dict(orient="records")
         )
-        if result["success"] and len(result.get("invoice_errors", [])) == 0:
+        # Validación extra por si result no es dict
+        if (
+            isinstance(result, dict)
+            and result.get("success", False)
+            and len(result.get("invoice_errors", [])) == 0
+        ):
             print(f"Factura {facturas[i]} guardada satisfactoriamente.")
         else:
-            print(f"Se detuvo la facturación de {facturas[i]}: {result['message']}")
-        # Incrementa el índice para procesar la siguiente factura
+            mensaje = (
+                result["message"]
+                if isinstance(result, dict) and "message" in result
+                else str(result)
+            )
+            print(f"Se detuvo la facturación de {facturas[i]}: {mensaje}")
         i += 1
-        # Espera 2 segundos antes de procesar la siguiente factura
         sleep(2)
 
     print("Proceso de facturación finalizado.")
