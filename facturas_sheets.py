@@ -68,13 +68,13 @@ class FacturasSheetManager:
             right_on="fecha",
             direction="nearest",
         )  # Combinar por aproximación
-        data.sort_values(by="doc_num_encab", inplace=True, ascending=True)
+        data.sort_values(by="doc_num", inplace=True, ascending=True)
         self.clear_facturas_data()
         if not data.empty:
             # Selecciona y ordena las columnas a actualizar
             # Asegúrate de que las columnas existan en el DataFrame
             columnas = [
-                "doc_num_encab",
+                "doc_num",
                 "rif",
                 "co_art",
                 "comentario",

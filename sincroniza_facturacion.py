@@ -41,7 +41,7 @@ class SincronizaFacturacion:
     def data_a_validar_en_sheet(self, params={}) -> DataFrame:
         # Campos a validar en Sheet
         campos_a_validar = [
-            "doc_num_encab",
+            "doc_num",
             "rif",
             "fec_emis",
             "co_art",
@@ -66,17 +66,17 @@ class SincronizaFacturacion:
         # Obtener los clientes de Profit
         clientes = self.oClientes.get_clientes_profit()[["co_cli", "rif"]]
         # Obtener las facturas de Profit entre las fechas especificadas
-        data = self.oVentas.get_facturas(
-            fecha_d=params["fechaInicio"], fecha_h=params["fechaFin"]
+        data = self.oVentas.get_facturas_x_articulos(
+            fecha_desde=params["fechaInicio"], fecha_hasta=params["fechaFin"]
         )
         data["co_cli"] = data["co_cli"].str.strip()
-        data["doc_num_encab"] = data["doc_num_encab"].str.strip()
+        data["doc_num"] = data["doc_num"].str.strip()
         data["co_art"] = data["co_art"].str.strip()
-        data.sort_values(by=["doc_num_encab", "reng_num"], inplace=True)
+        data.sort_values(by=["doc_num", "reng_num"], inplace=True)
         # Combinar datos de facturas con clientes de Profit
         data = data.merge(clientes, left_on="co_cli", right_on="co_cli", how="left")
         # Filtrar las facturas que no están en la imprenta
-        data = data[data["doc_num_encab"].isin(diferencias)]
+        data = data[data["doc_num"].isin(diferencias)]
         # Reemplazar valores NaN por cadenas vacías
         return data.replace(nan, "", regex=True)[campos_a_validar]
 
@@ -112,6 +112,7 @@ if __name__ == "__main__":
         user=os.environ["DB_USER_PROFIT"],
         password=os.environ["DB_PASSWORD_PROFIT"],
     )
+    sqlserver_connector.connect()
     db = DatabaseConnector(sqlserver_connector)
 
     api_url = os.getenv("API_GATEWAY_URL_GET_LIST_INVOICES")
