@@ -1,7 +1,11 @@
+import logging
+import os
 from datetime import datetime
+from typing import Optional
 
 from google.oauth2.credentials import Credentials as UserCredentials
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from pandas import DataFrame
 
@@ -32,8 +36,8 @@ class BCVSheetManager:
 
     def update_historico_tasas_sheet(self, data_historico_tasas: DataFrame):
         if not data_historico_tasas.empty:
-            data_historico_tasas["fecha"] = data_historico_tasas["fecha"].dt.strftime(
-                "%Y-%m-%d %H:%M:%S"
+            data_historico_tasas["fecha"] = data_historico_tasas["fecha"].apply(
+                lambda x: x.strftime("%Y-%m-%d %H:%M:%S")
             )
             # # Optimiza el formateo usando DataFrame.round y applymap para múltiples columnas
             # cols_to_format = ["compra_bid2", "venta_ask2", "var_tasas"]
@@ -59,39 +63,71 @@ class BCVSheetManager:
             )
         return None
 
-    def get_last_updated_date(self) -> str:
-        creds = None
-        if os.path.exists("token.json"):
-            creds = UserCredentials.from_authorized_user_file(
-                "token.json",
-                ["https://www.googleapis.com/auth/drive.metadata.readonly"],
-            )
+    def get_last_updated_date(self) -> Optional[str]:
+        """
+        Obtiene la fecha de última modificación del archivo en Drive.
+        Intenta primero con Service Account (sin interacción). Si no es posible,
+        cae al flujo de usuario interactivo (InstalledAppFlow).
+        """
 
-        if not creds or not creds.valid:
-            from google_auth_oauthlib.flow import InstalledAppFlow
-
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "credentials.json",
-                ["https://www.googleapis.com/auth/drive.metadata.readonly"],
-            )
-            creds = flow.run_local_server(port=0)
-            with open("token.json", "w") as token:
-                token.write(creds.to_json())
-
-        service = build("drive", "v3", credentials=creds)
         file_id = "1MUaDhCM_4sGWTboQgXk1_Ge_4VLy5QRsGe2omH08Lbk"
-        file = service.files().get(fileId=file_id, fields="modifiedTime").execute()
-        # Convierte la fecha de Google Drive (RFC3339) a formato normalizado
-        modified_time = file.get("modifiedTime")
-        if modified_time:
-            # Ejemplo: '2024-06-10T14:23:45.123Z'
-            dt = datetime.strptime(modified_time, "%Y-%m-%dT%H:%M:%S.%fZ")
-            return dt.strftime("%Y-%m-%d")
-        return None
+        scopes = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
+
+        # Intentar credenciales de Service Account (no interactivo)
+        try:
+            if isinstance(self.credentials_file, str) and os.path.exists(
+                self.credentials_file
+            ):
+                sa_creds = ServiceAccountCredentials.from_service_account_file(
+                    self.credentials_file, scopes=scopes
+                )
+            elif isinstance(self.credentials_file, dict):
+                sa_creds = ServiceAccountCredentials.from_service_account_info(
+                    self.credentials_file, scopes=scopes
+                )
+            else:
+                sa_creds = None
+
+            if sa_creds is not None:
+                # Asegúrate de que el archivo en Drive esté compartido con la cuenta de servicio
+                service = build("drive", "v3", credentials=sa_creds)
+            else:
+                # Fallback a credenciales de usuario (interactive)
+                creds = None
+                if os.path.exists("token.json"):
+                    try:
+                        creds = UserCredentials.from_authorized_user_file(
+                            "token.json", scopes
+                        )
+                    except Exception:
+                        creds = None
+                if not creds or not creds.valid:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        "credentials.json", scopes
+                    )
+                    creds = flow.run_local_server(port=0)
+                    with open("token.json", "w") as token:
+                        token.write(creds.to_json())
+                service = build("drive", "v3", credentials=creds)
+
+            file = service.files().get(fileId=file_id, fields="modifiedTime").execute()
+            modified_time = file.get("modifiedTime")
+            if modified_time:
+                # Maneja formatos con/ sin fracciones de segundo
+                try:
+                    dt = datetime.strptime(modified_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+                except ValueError:
+                    dt = datetime.strptime(modified_time, "%Y-%m-%dT%H:%M:%SZ")
+                return dt.strftime("%Y-%m-%d")
+        except Exception as e:
+            logging.getLogger(__name__).error(
+                "No se pudo obtener modifiedTime: %s", e, exc_info=True
+            )
+            # Si quieres propagar el error, haz `raise` en vez de `return None`
+            return ""
 
 
 if __name__ == "__main__":
-    import os
     import sys
     from datetime import date
 
