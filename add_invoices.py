@@ -277,6 +277,6 @@ if __name__ == "__main__":
             )
             print(f"Se detuvo la facturación de {facturas[i]}: {mensaje}")
         i += 1
-        sleep(2)
+        sleep(75)
 
     print("Proceso de facturación finalizado.")
