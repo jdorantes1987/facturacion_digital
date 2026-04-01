@@ -45,7 +45,8 @@ class MonitoreoProductos:
     def enviar_cambios_a_google_sheets(self):
         try:
             db = self.db
-            self.oProductosManager.update_productos_sheet(db)
+            if self.oProductosManager:
+                self.oProductosManager.update_productos_sheet(db)
             self.logger.info("Sheet de clientes actualizada correctamente.")
         except Exception as e:
             self.logger.error(
