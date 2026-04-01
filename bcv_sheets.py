@@ -160,15 +160,10 @@ if __name__ == "__main__":
         SPREADSHEET_ID, HISTORICO_TASAS_SHEET_DATA, CREDENTIALS_FILE
     )
     ultima_fecha_actualizacion = oBCV_sheet_manager.get_last_updated_date()
-    if ultima_fecha_actualizacion is not None:
-        hoy = date.today().strftime("%Y-%m-%d")
-        if ultima_fecha_actualizacion != hoy:
-            print("Actualizando histórico de tasas...")
-            data_historico_tasas = oDatosBCV.get_historico_tasas_actualizado()
-            if not data_historico_tasas.empty:
-                oBCV_sheet_manager.update_historico_tasas_sheet(data_historico_tasas)
-                print(
-                    "Actualizando hoja de Google Sheets con datos históricos de tasas..."
-                )
-            else:
-                print("No hay datos históricos de tasas para actualizar.")
+
+    data_historico_tasas = oDatosBCV.get_historico_tasas_actualizado()
+    if not data_historico_tasas.empty:
+        oBCV_sheet_manager.update_historico_tasas_sheet(data_historico_tasas)
+        print("Actualizando hoja de Google Sheets con datos históricos de tasas...")
+    else:
+        print("No hay datos históricos de tasas para actualizar.")

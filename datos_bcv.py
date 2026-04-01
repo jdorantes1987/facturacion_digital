@@ -2,6 +2,7 @@ import locale
 import socket
 import ssl
 from datetime import datetime
+from urllib.error import HTTPError, URLError
 from urllib.request import build_opener, urlcleanup, urlretrieve
 
 from numpy import where
@@ -11,6 +12,12 @@ from xlrd import open_workbook
 ssl._create_default_https_context = ssl._create_unverified_context
 url_base = "https://www.bcv.org.ve/sites/default/files/EstadisticasGeneral"
 dic_f_usd_year = {
+    "2026": [
+        "2_1_2d26_smc.xls",
+        "2_1_2c26_smc.xls",
+        "2_1_2b26_smc.xls",
+        "2_1_2a26_smc.xls",
+    ],
     "2025": [
         "2_1_2d25_smc.xls",
         "2_1_2c25_smc.xls",
@@ -53,6 +60,7 @@ dic_f_usd_year = {
 class DatosBCV:
     def __init__(self, manager_sheets):
         self.manager_sheets = manager_sheets
+        self._last_downloaded_file_name = None
 
     # Actualiza el archivo tasas_BCV.xlsx
 
@@ -65,7 +73,7 @@ class DatosBCV:
 
         df_file_tasa = self.get_historico_tasas_google_sh()
         df_file_tasa_filtred = df_file_tasa[
-            df_file_tasa["archivo"] != self.get_name_file_tasa_download()
+            df_file_tasa["archivo"] != self.get_download_file_name()
         ]
         new_file_tasa = [df_file_tasa_new, df_file_tasa_filtred]
         df = concat(new_file_tasa).reset_index(drop=True)
@@ -82,8 +90,7 @@ class DatosBCV:
 
     def get_data_usd_bcv_web_last_qt(self) -> DataFrame:
         data = DataFrame()
-        name_file_bcv = self.get_name_file_tasa_download()
-        url = url_base + f"/{name_file_bcv}"
+        name_file_bcv = None
         socket.setdefaulttimeout(7)  # 3 seconds
         #  cambiar el encabezado del agente de usuario
         opener = build_opener()
@@ -94,10 +101,32 @@ class DatosBCV:
                 "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/7.0.4 Mobile/16B91 Safari/605.1.15",
             )
         ]
+        for candidate_file in self.get_candidate_file_tasa_downloads():
+            url = url_base + f"/{candidate_file}"
+            try:
+                # urlretrieve Descarga archivos de la red al equipo local
+                file_name = urlretrieve(url)
+                name_file_bcv = candidate_file
+                self._last_downloaded_file_name = candidate_file
+                print("Se descargó archivo de la ruta:", url)
+                break
+            except HTTPError as e:
+                if e.code == 404:
+                    continue
+                print(f"HTTPError ({e.code}) al descargar: {url}")
+                return data
+            except URLError:
+                print(f"No se pudo conectar al BCV para descargar: {url}")
+                return data
+            except socket.timeout:
+                print("socket.timeout")
+                return data
+
+        if not name_file_bcv:
+            print("No se encontró un archivo BCV disponible para descargar.")
+            return data
+
         try:
-            # urlretrieve Descarga archivos de la red al equipo local
-            file_name = urlretrieve(url)
-            print("Se descargó archivo de la ruta:", url)
             # Como el resultado de la descarga es una tuple con la información del archivo y el recurso de la web se coloca el indice [0] que es la del archivo
             wb = open_workbook(
                 file_name[0], on_demand=True
@@ -140,6 +169,34 @@ class DatosBCV:
         except socket.timeout:
             print("socket.timeout")
         return data
+
+    def get_candidate_file_tasa_downloads(self) -> list[str]:
+        current_year = datetime.now().year
+        years_available = sorted((int(y) for y in dic_f_usd_year.keys()), reverse=True)
+        if current_year not in years_available:
+            years_available.insert(0, current_year)
+
+        candidate_files = []
+        current_quarter_idx = self.get_current_quarter_number() - 1
+
+        for year in years_available:
+            year_files = dic_f_usd_year.get(str(year), [])
+            if not year_files:
+                continue
+
+            ordered_quarter_files = list(reversed(year_files))
+            if year == current_year:
+                candidate_files.extend(ordered_quarter_files[current_quarter_idx::-1])
+                candidate_files.extend(
+                    ordered_quarter_files[current_quarter_idx + 1 :][::-1]
+                )
+            elif year < current_year:
+                candidate_files.extend(ordered_quarter_files[::-1])
+
+        return candidate_files
+
+    def get_download_file_name(self) -> str:
+        return self._last_downloaded_file_name or self.get_name_file_tasa_download()
 
     def get_name_file_tasa_download(self) -> str:
         year = str(datetime.now().year)
